@@ -15,9 +15,10 @@ from tkinter import ttk, messagebox, filedialog
 class TimaApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Tima - Activity Timer")
-        self.root.geometry("600x800")
+        self.root.title("Tima")
+        self.root.geometry("400x500")
         self.root.configure(bg='#f4f7f6')
+        self.root.resizable(True, True)
 
         # App state
         self.projects = []
@@ -51,51 +52,54 @@ class TimaApp:
         # Bind global keyboard shortcuts
         self.setup_global_shortcuts()
 
+    def create_menu_bar(self):
+        """Create the application menu bar"""
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+
+        # File menu
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Import Projects...", command=self.import_projects)
+        file_menu.add_command(label="Export Projects...", command=self.export_projects)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.on_closing)
+
+        # Project menu
+        project_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Project", menu=project_menu)
+        project_menu.add_command(label="Rename Selected", command=self.rename_project, accelerator="F2")
+        project_menu.add_command(label="Delete Selected", command=self.delete_project, accelerator="Del")
+        project_menu.add_separator()
+        project_menu.add_command(label="Reset Selected", command=self.reset_selected_project)
+        project_menu.add_command(label="Pause/Resume Selected", command=self.toggle_selected_project)
+
+        # Timer menu
+        timer_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Timer", menu=timer_menu)
+        timer_menu.add_command(label="Pause/Resume Current", command=self.toggle_current_project, accelerator="Space")
+        timer_menu.add_command(label="Reset Current", command=self.reset_current_project)
+        timer_menu.add_separator()
+        timer_menu.add_command(label="Next Project", command=self.next_project, accelerator="Down")
+        timer_menu.add_command(label="Previous Project", command=self.previous_project, accelerator="Up")
+
+        # Settings menu
+        settings_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Settings", menu=settings_menu)
+        settings_menu.add_command(label="Set Default Duration...", command=self.show_duration_dialog)
+
+        # Help menu
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="Keyboard Shortcuts", command=self.show_help, accelerator="?")
+
     def setup_gui(self):
+        # Create menu bar
+        self.create_menu_bar()
+
         # Main container
         main_frame = tk.Frame(self.root, bg='#f4f7f6', padx=20, pady=20)
         main_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Duration settings frame
-        duration_frame = tk.LabelFrame(
-            main_frame,
-            text="Timer Settings",
-            font=('Arial', 12, 'bold'),
-            bg='#f4f7f6',
-            fg='#2c3e50',
-            padx=10,
-            pady=5
-        )
-        duration_frame.pack(fill=tk.X, pady=(0, 10))
-
-        duration_controls = tk.Frame(duration_frame, bg='#f4f7f6')
-        duration_controls.pack(fill=tk.X)
-
-        tk.Label(duration_controls, text="Default Duration:", bg='#f4f7f6', font=('Arial', 10)).pack(side=tk.LEFT)
-
-        # Set initial values based on loaded default_duration
-        initial_hours = self.default_duration // 3600
-        initial_minutes = (self.default_duration % 3600) // 60
-        self.hours_var = tk.StringVar(value=str(initial_hours))
-        self.minutes_var = tk.StringVar(value=str(initial_minutes))
-
-        tk.Entry(duration_controls, textvariable=self.hours_var, width=3, font=('Arial', 10)).pack(side=tk.LEFT,
-                                                                                                   padx=(5, 2))
-        tk.Label(duration_controls, text="h", bg='#f4f7f6', font=('Arial', 10)).pack(side=tk.LEFT)
-
-        tk.Entry(duration_controls, textvariable=self.minutes_var, width=3, font=('Arial', 10)).pack(side=tk.LEFT,
-                                                                                                     padx=(5, 2))
-        tk.Label(duration_controls, text="m", bg='#f4f7f6', font=('Arial', 10)).pack(side=tk.LEFT)
-
-        tk.Button(
-            duration_controls,
-            text="Update",
-            font=('Arial', 10),
-            bg='#3498db',
-            fg='white',
-            padx=10,
-            command=self.update_default_duration
-        ).pack(side=tk.LEFT, padx=(10, 0))
 
         # Current activity display
         self.activity_frame = tk.Frame(main_frame, bg='#3498db', relief=tk.RAISED, bd=2)
@@ -142,44 +146,6 @@ class TimaApp:
         )
         self.action_status_label.pack(pady=(5, 0))
         self.action_status_timer = None
-
-        # Timer controls
-        controls_frame = tk.Frame(main_frame, bg='#f4f7f6')
-        controls_frame.pack(pady=15)
-
-        self.pause_btn = tk.Button(
-            controls_frame,
-            text="Pause Current",
-            font=('Arial', 12),
-            bg='#e74c3c',
-            fg='white',
-            padx=20,
-            pady=8,
-            command=self.toggle_current_project
-        )
-        self.pause_btn.pack(side=tk.LEFT, padx=5)
-
-        tk.Button(
-            controls_frame,
-            text="Reset Current",
-            font=('Arial', 12),
-            bg='#e67e22',
-            fg='white',
-            padx=20,
-            pady=8,
-            command=self.reset_current_project
-        ).pack(side=tk.LEFT, padx=5)
-
-        tk.Button(
-            controls_frame,
-            text="Next Project",
-            font=('Arial', 12),
-            bg='#27ae60',
-            fg='white',
-            padx=20,
-            pady=8,
-            command=self.next_project
-        ).pack(side=tk.LEFT, padx=5)
 
         # Project management section
         project_frame = tk.LabelFrame(
@@ -241,70 +207,6 @@ class TimaApp:
         self.project_listbox.bind('<F2>', lambda e: self.rename_project())
         self.project_listbox.bind('<Return>', lambda e: self.rename_project())
         self.project_listbox.bind('<Double-Button-1>', lambda e: self.rename_project())
-
-        # Project control buttons
-        project_btn_frame = tk.Frame(project_frame, bg='#f4f7f6')
-        project_btn_frame.pack(fill=tk.X, pady=(10, 0))
-
-        tk.Button(
-            project_btn_frame,
-            text="Rename Selected",
-            font=('Arial', 12),
-            bg='#3498db',
-            fg='white',
-            command=self.rename_project
-        ).pack(side=tk.LEFT, padx=(0, 5))
-
-        tk.Button(
-            project_btn_frame,
-            text="Delete Selected",
-            font=('Arial', 12),
-            bg='#e74c3c',
-            fg='white',
-            command=self.delete_project
-        ).pack(side=tk.LEFT, padx=5)
-
-        tk.Button(
-            project_btn_frame,
-            text="Reset Selected",
-            font=('Arial', 12),
-            bg='#e67e22',
-            fg='white',
-            command=self.reset_selected_project
-        ).pack(side=tk.LEFT, padx=5)
-
-        tk.Button(
-            project_btn_frame,
-            text="Pause/Resume Selected",
-            font=('Arial', 12),
-            bg='#f39c12',
-            fg='white',
-            command=self.toggle_selected_project
-        ).pack(side=tk.LEFT, padx=5)
-
-        # File controls
-        file_frame = tk.Frame(project_frame, bg='#f4f7f6')
-        file_frame.pack(fill=tk.X, pady=(10, 0))
-
-        tk.Button(
-            file_frame,
-            text="Import from .txt",
-            font=('Arial', 12),
-            bg='#27ae60',
-            fg='white',
-            padx=20,
-            command=self.import_projects
-        ).pack(side=tk.LEFT, padx=(0, 5))
-
-        tk.Button(
-            file_frame,
-            text="Export to .txt",
-            font=('Arial', 12),
-            bg='#27ae60',
-            fg='white',
-            padx=20,
-            command=self.export_projects
-        ).pack(side=tk.LEFT)
 
         # Initial render
         self.render_projects()
@@ -501,25 +403,91 @@ RENAME DIALOG:
             self.update_current_activity()
             self.show_status(f"Renamed back to: {old_name}", color='#3498db')
 
-    def update_default_duration(self):
-        """Update the default duration for new projects"""
-        try:
-            hours = int(self.hours_var.get() or 0)
-            minutes = int(self.minutes_var.get() or 0)
-            self.default_duration = hours * 3600 + minutes * 60
+    def show_duration_dialog(self):
+        """Show dialog to set default duration"""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("Set Default Duration")
+        dialog.geometry("350x150")
+        dialog.configure(bg='#f4f7f6')
+        dialog.transient(self.root)
+        dialog.grab_set()
 
-            if self.default_duration <= 0:
-                messagebox.showwarning("Invalid Duration", "Duration must be greater than 0!")
-                self.hours_var.set("1")
-                self.minutes_var.set("0")
-                self.default_duration = 3600
-            else:
-                messagebox.showinfo("Updated", f"Default duration set to {hours}h {minutes}m")
+        # Center the dialog
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
+        y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
+        dialog.geometry(f"+{x}+{y}")
 
-        except ValueError:
-            messagebox.showerror("Invalid Input", "Please enter valid numbers for hours and minutes!")
-            self.hours_var.set("1")
-            self.minutes_var.set("0")
+        # Dialog content
+        frame = tk.Frame(dialog, bg='#f4f7f6', padx=20, pady=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            frame,
+            text="Set default duration for new projects:",
+            bg='#f4f7f6',
+            font=('Arial', 11)
+        ).pack(anchor=tk.W, pady=(0, 10))
+
+        # Duration inputs
+        input_frame = tk.Frame(frame, bg='#f4f7f6')
+        input_frame.pack(pady=(0, 15))
+
+        current_hours = self.default_duration // 3600
+        current_minutes = (self.default_duration % 3600) // 60
+
+        hours_var = tk.StringVar(value=str(current_hours))
+        minutes_var = tk.StringVar(value=str(current_minutes))
+
+        tk.Entry(input_frame, textvariable=hours_var, width=4, font=('Arial', 12)).pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(input_frame, text="hours", bg='#f4f7f6', font=('Arial', 11)).pack(side=tk.LEFT, padx=(0, 10))
+
+        tk.Entry(input_frame, textvariable=minutes_var, width=4, font=('Arial', 12)).pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(input_frame, text="minutes", bg='#f4f7f6', font=('Arial', 11)).pack(side=tk.LEFT)
+
+        def save_duration():
+            try:
+                hours = int(hours_var.get() or 0)
+                minutes = int(minutes_var.get() or 0)
+                new_duration = hours * 3600 + minutes * 60
+
+                if new_duration <= 0:
+                    messagebox.showwarning("Invalid Duration", "Duration must be greater than 0!")
+                else:
+                    self.default_duration = new_duration
+                    self.save_projects()
+                    self.show_status(f"Default duration set to {hours}h {minutes}m", color='#3498db')
+                    dialog.destroy()
+            except ValueError:
+                messagebox.showerror("Invalid Input", "Please enter valid numbers!")
+
+        # Buttons
+        btn_frame = tk.Frame(frame, bg='#f4f7f6')
+        btn_frame.pack()
+
+        tk.Button(
+            btn_frame,
+            text="Save",
+            font=('Arial', 10),
+            bg='#3498db',
+            fg='white',
+            padx=20,
+            command=save_duration
+        ).pack(side=tk.LEFT, padx=(0, 5))
+
+        tk.Button(
+            btn_frame,
+            text="Cancel",
+            font=('Arial', 10),
+            bg='#95a5a6',
+            fg='white',
+            padx=20,
+            command=dialog.destroy
+        ).pack(side=tk.LEFT)
+
+        # Bind Enter and Escape
+        dialog.bind('<Return>', lambda e: save_duration())
+        dialog.bind('<Escape>', lambda e: dialog.destroy())
 
     def get_current_time_left(self):
         """Get the time left for the current project"""
@@ -817,7 +785,6 @@ RENAME DIALOG:
             self.project_paused[project_name] = not current_state
             self.save_projects()
             self.render_projects()
-            self.update_pause_button()
 
     def toggle_selected_project(self):
         """Toggle pause/resume for selected project"""
@@ -830,15 +797,6 @@ RENAME DIALOG:
                 self.project_paused[project_name] = not current_state
                 self.save_projects()
                 self.render_projects()
-                if index == self.current_project_index:
-                    self.update_pause_button()
-
-    def update_pause_button(self):
-        """Update the pause button text based on current project state"""
-        if self.is_current_project_paused():
-            self.pause_btn.config(text="Resume Current")
-        else:
-            self.pause_btn.config(text="Pause Current")
 
     def update_timer_display(self):
         """Update the timer display and status"""
@@ -868,7 +826,6 @@ RENAME DIALOG:
             self.activity_label.config(text=self.projects[self.current_project_index])
         else:
             self.activity_label.config(text="No Projects")
-        self.update_pause_button()
 
     def update_display(self):
         """Update all display elements"""
