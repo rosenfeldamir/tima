@@ -1,19 +1,13 @@
 {
   "projects": [
-    "1",
-    "2",
-    "3"
+    "tima"
   ],
-  "current_index": 2,
+  "current_index": 0,
   "default_duration": 1800,
   "project_times": {
-    "2": 1755,
-    "3": 1784,
-    "1": 1742
+    "tima": 1599
   },
   "project_paused": {
-    "2": false,
-    "3": false,
-    "1": false
+    "tima": false
   }
 }

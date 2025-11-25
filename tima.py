@@ -17,6 +17,7 @@ class TimaApp:
         self.root = root
         self.root.title("Tima")
         self.root.geometry("400x500")
+        self.root.minsize(350, 450)
         self.root.configure(bg='#f4f7f6')
         self.root.resizable(True, True)
 
@@ -98,38 +99,41 @@ class TimaApp:
         self.create_menu_bar()
 
         # Main container
-        main_frame = tk.Frame(self.root, bg='#f4f7f6', padx=20, pady=20)
+        main_frame = tk.Frame(self.root, bg='#f4f7f6', padx=12, pady=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Current activity display
-        self.activity_frame = tk.Frame(main_frame, bg='#3498db', relief=tk.RAISED, bd=2)
-        self.activity_frame.pack(fill=tk.X, pady=(0, 10))
+        self.activity_frame = tk.Frame(main_frame, bg='#3498db', relief=tk.FLAT, bd=0)
+        self.activity_frame.pack(fill=tk.X, pady=(0, 8))
 
         self.activity_label = tk.Label(
             self.activity_frame,
             text="Loading...",
-            font=('Arial', 16, 'bold'),
+            font=('Arial', 12, 'bold'),
             bg='#3498db',
             fg='white',
-            pady=15
+            pady=8
         )
         self.activity_label.pack()
 
         # Timer display
         self.timer_label = tk.Label(
             main_frame,
-            text="01:00:00",
-            font=('Arial', 48, 'bold'),
+            text="00:30:00",
+            font=('Arial', 32, 'bold'),
             bg='#f4f7f6',
             fg='#2c3e50'
         )
-        self.timer_label.pack(pady=20)
+        self.timer_label.pack(pady=(5, 5))
 
-        # Project status
+        # Status container (combined status + action status)
+        status_container = tk.Frame(main_frame, bg='#f4f7f6')
+        status_container.pack(fill=tk.X, pady=(0, 8))
+
         self.status_label = tk.Label(
-            main_frame,
+            status_container,
             text="",
-            font=('Arial', 12),
+            font=('Arial', 9),
             bg='#f4f7f6',
             fg='#7f8c8d'
         )
@@ -137,48 +141,49 @@ class TimaApp:
 
         # Action status message (for showing temporary feedback)
         self.action_status_label = tk.Label(
-            main_frame,
+            status_container,
             text="",
-            font=('Arial', 11),
+            font=('Arial', 9),
             bg='#f4f7f6',
             fg='#27ae60',
             height=1
         )
-        self.action_status_label.pack(pady=(5, 0))
+        self.action_status_label.pack()
         self.action_status_timer = None
 
         # Project management section
         project_frame = tk.LabelFrame(
             main_frame,
-            text="Manage Projects",
-            font=('Arial', 14, 'bold'),
+            text="Projects",
+            font=('Arial', 10, 'bold'),
             bg='#f4f7f6',
             fg='#2c3e50',
-            padx=10,
-            pady=10
+            padx=8,
+            pady=6
         )
-        project_frame.pack(fill=tk.BOTH, expand=True, pady=20)
+        project_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
 
         # Add project controls
         add_frame = tk.Frame(project_frame, bg='#f4f7f6')
-        add_frame.pack(fill=tk.X, pady=(0, 10))
+        add_frame.pack(fill=tk.X, pady=(0, 6))
 
         self.project_entry = tk.Entry(
             add_frame,
-            font=('Arial', 12),
+            font=('Arial', 10),
             relief=tk.SOLID,
             bd=1
         )
-        self.project_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        self.project_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
         self.project_entry.bind('<Return>', lambda e: self.add_project())
 
         tk.Button(
             add_frame,
             text="Add",
-            font=('Arial', 12),
+            font=('Arial', 9),
             bg='#3498db',
             fg='white',
-            padx=20,
+            padx=12,
+            pady=2,
             command=self.add_project
         ).pack(side=tk.RIGHT)
 
@@ -188,12 +193,13 @@ class TimaApp:
 
         self.project_listbox = tk.Listbox(
             list_frame,
-            font=('Arial', 11),
-            height=10,
+            font=('Arial', 9),
+            height=8,
             relief=tk.SOLID,
             bd=1,
             selectmode=tk.SINGLE,
-            exportselection=False  # Keep selection even when out of focus
+            exportselection=False,  # Keep selection even when out of focus
+            highlightthickness=0
         )
         self.project_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -235,7 +241,7 @@ class TimaApp:
         """Show keyboard shortcuts help dialog"""
         help_dialog = tk.Toplevel(self.root)
         help_dialog.title("Keyboard Shortcuts")
-        help_dialog.geometry("500x450")
+        help_dialog.geometry("380x300")
         help_dialog.configure(bg='#f4f7f6')
         help_dialog.transient(self.root)
         help_dialog.grab_set()
@@ -247,29 +253,29 @@ class TimaApp:
         help_dialog.geometry(f"+{x}+{y}")
 
         # Dialog content
-        frame = tk.Frame(help_dialog, bg='#f4f7f6', padx=20, pady=20)
+        frame = tk.Frame(help_dialog, bg='#f4f7f6', padx=16, pady=12)
         frame.pack(fill=tk.BOTH, expand=True)
 
         tk.Label(
             frame,
             text="Keyboard Shortcuts",
             bg='#f4f7f6',
-            font=('Arial', 16, 'bold'),
+            font=('Arial', 12, 'bold'),
             fg='#2c3e50'
-        ).pack(pady=(0, 15))
+        ).pack(pady=(0, 10))
 
         # Create shortcuts text
         shortcuts_text = tk.Text(
             frame,
-            font=('Courier New', 10),
+            font=('Courier New', 9),
             bg='white',
             relief=tk.SOLID,
             bd=1,
             wrap=tk.WORD,
-            height=18,
-            width=55
+            height=13,
+            width=42
         )
-        shortcuts_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+        shortcuts_text.pack(fill=tk.BOTH, expand=True, pady=(0, 8))
 
         help_content = """GLOBAL SHORTCUTS:
   Space              Pause/Resume current project
@@ -299,15 +305,17 @@ RENAME DIALOG:
         tk.Button(
             frame,
             text="Close",
-            font=('Arial', 11),
+            font=('Arial', 9),
             bg='#3498db',
             fg='white',
-            padx=30,
+            padx=24,
+            pady=3,
             command=help_dialog.destroy
         ).pack()
 
         # Bind Escape to close
         help_dialog.bind('<Escape>', lambda e: help_dialog.destroy())
+        help_dialog.focus_set()
 
     def previous_project(self):
         """Move to the previous project"""
@@ -407,7 +415,7 @@ RENAME DIALOG:
         """Show dialog to set default duration"""
         dialog = tk.Toplevel(self.root)
         dialog.title("Set Default Duration")
-        dialog.geometry("350x150")
+        dialog.geometry("320x140")
         dialog.configure(bg='#f4f7f6')
         dialog.transient(self.root)
         dialog.grab_set()
@@ -419,19 +427,19 @@ RENAME DIALOG:
         dialog.geometry(f"+{x}+{y}")
 
         # Dialog content
-        frame = tk.Frame(dialog, bg='#f4f7f6', padx=20, pady=20)
+        frame = tk.Frame(dialog, bg='#f4f7f6', padx=16, pady=12)
         frame.pack(fill=tk.BOTH, expand=True)
 
         tk.Label(
             frame,
             text="Set default duration for new projects:",
             bg='#f4f7f6',
-            font=('Arial', 11)
-        ).pack(anchor=tk.W, pady=(0, 10))
+            font=('Arial', 10)
+        ).pack(anchor=tk.W, pady=(0, 8))
 
         # Duration inputs
         input_frame = tk.Frame(frame, bg='#f4f7f6')
-        input_frame.pack(pady=(0, 15))
+        input_frame.pack(pady=(0, 12))
 
         current_hours = self.default_duration // 3600
         current_minutes = (self.default_duration % 3600) // 60
@@ -439,11 +447,11 @@ RENAME DIALOG:
         hours_var = tk.StringVar(value=str(current_hours))
         minutes_var = tk.StringVar(value=str(current_minutes))
 
-        tk.Entry(input_frame, textvariable=hours_var, width=4, font=('Arial', 12)).pack(side=tk.LEFT, padx=(0, 2))
-        tk.Label(input_frame, text="hours", bg='#f4f7f6', font=('Arial', 11)).pack(side=tk.LEFT, padx=(0, 10))
+        tk.Entry(input_frame, textvariable=hours_var, width=4, font=('Arial', 10)).pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(input_frame, text="hours", bg='#f4f7f6', font=('Arial', 9)).pack(side=tk.LEFT, padx=(0, 8))
 
-        tk.Entry(input_frame, textvariable=minutes_var, width=4, font=('Arial', 12)).pack(side=tk.LEFT, padx=(0, 2))
-        tk.Label(input_frame, text="minutes", bg='#f4f7f6', font=('Arial', 11)).pack(side=tk.LEFT)
+        tk.Entry(input_frame, textvariable=minutes_var, width=4, font=('Arial', 10)).pack(side=tk.LEFT, padx=(0, 2))
+        tk.Label(input_frame, text="minutes", bg='#f4f7f6', font=('Arial', 9)).pack(side=tk.LEFT)
 
         def save_duration():
             try:
@@ -468,26 +476,29 @@ RENAME DIALOG:
         tk.Button(
             btn_frame,
             text="Save",
-            font=('Arial', 10),
+            font=('Arial', 9),
             bg='#3498db',
             fg='white',
-            padx=20,
+            padx=16,
+            pady=3,
             command=save_duration
-        ).pack(side=tk.LEFT, padx=(0, 5))
+        ).pack(side=tk.LEFT, padx=(0, 4))
 
         tk.Button(
             btn_frame,
             text="Cancel",
-            font=('Arial', 10),
+            font=('Arial', 9),
             bg='#95a5a6',
             fg='white',
-            padx=20,
+            padx=16,
+            pady=3,
             command=dialog.destroy
         ).pack(side=tk.LEFT)
 
         # Bind Enter and Escape
         dialog.bind('<Return>', lambda e: save_duration())
         dialog.bind('<Escape>', lambda e: dialog.destroy())
+        dialog.focus_set()
 
     def get_current_time_left(self):
         """Get the time left for the current project"""
@@ -665,7 +676,7 @@ RENAME DIALOG:
                 # Create a simple dialog window for renaming
                 dialog = tk.Toplevel(self.root)
                 dialog.title("Rename Project")
-                dialog.geometry("400x120")
+                dialog.geometry("350x110")
                 dialog.configure(bg='#f4f7f6')
                 dialog.transient(self.root)
                 dialog.grab_set()
@@ -677,17 +688,17 @@ RENAME DIALOG:
                 dialog.geometry(f"+{x}+{y}")
 
                 # Dialog content
-                frame = tk.Frame(dialog, bg='#f4f7f6', padx=20, pady=20)
+                frame = tk.Frame(dialog, bg='#f4f7f6', padx=16, pady=12)
                 frame.pack(fill=tk.BOTH, expand=True)
 
                 tk.Label(
                     frame,
                     text="New project name:",
                     bg='#f4f7f6',
-                    font=('Arial', 11)
-                ).pack(anchor=tk.W, pady=(0, 5))
+                    font=('Arial', 10)
+                ).pack(anchor=tk.W, pady=(0, 6))
 
-                entry = tk.Entry(frame, font=('Arial', 12), width=40)
+                entry = tk.Entry(frame, font=('Arial', 10), width=35)
                 entry.pack(fill=tk.X, pady=(0, 10))
                 entry.insert(0, old_name)
                 entry.select_range(0, tk.END)
@@ -732,20 +743,22 @@ RENAME DIALOG:
                 tk.Button(
                     btn_frame,
                     text="Save",
-                    font=('Arial', 10),
+                    font=('Arial', 9),
                     bg='#3498db',
                     fg='white',
-                    padx=20,
+                    padx=16,
+                    pady=3,
                     command=save_rename
-                ).pack(side=tk.LEFT, padx=(0, 5))
+                ).pack(side=tk.LEFT, padx=(0, 4))
 
                 tk.Button(
                     btn_frame,
                     text="Cancel",
-                    font=('Arial', 10),
+                    font=('Arial', 9),
                     bg='#95a5a6',
                     fg='white',
-                    padx=20,
+                    padx=16,
+                    pady=3,
                     command=cancel_rename
                 ).pack(side=tk.LEFT)
 
