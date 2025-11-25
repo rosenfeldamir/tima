@@ -10,6 +10,12 @@ import tkinter as tk
 import winsound  # For Windows alarm sound (use 'playsound' library for cross-platform)
 from datetime import datetime, timedelta
 from tkinter import ttk, messagebox, filedialog
+from io import BytesIO
+
+
+from PIL import Image, ImageDraw
+PIL_AVAILABLE = True
+
 
 
 class TimaApp:
@@ -35,6 +41,9 @@ class TimaApp:
 
         self.root.configure(bg=self.colors['bg'])
         self.root.resizable(True, True)
+
+        # Set custom icon
+        self.set_window_icon()
 
         # App state
         self.projects = []
@@ -67,6 +76,54 @@ class TimaApp:
 
         # Bind global keyboard shortcuts
         self.setup_global_shortcuts()
+
+    def set_window_icon(self):
+        """Set a custom window icon"""
+        try:
+            # Create a 64x64 icon with a modern clock design
+            size = 64
+            img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(img)
+
+            # Parse primary color
+            primary_rgb = tuple(int(self.colors['primary'][i:i+2], 16) for i in (1, 3, 5))
+
+            # Draw circle background
+            padding = 4
+            draw.ellipse(
+                [padding, padding, size-padding, size-padding],
+                fill=primary_rgb,
+                outline=None
+            )
+
+            # Draw clock hands (simplified)
+            center = size // 2
+            # Hour hand (pointing up-right)
+            draw.line([center, center, center + 8, center - 10], fill='white', width=4)
+            # Minute hand (pointing right)
+            draw.line([center, center, center + 14, center - 6], fill='white', width=3)
+            # Center dot
+            draw.ellipse([center-3, center-3, center+3, center+3], fill='white')
+
+            # Save as .ico file for Windows taskbar compatibility
+            icon_path = os.path.join(os.path.dirname(__file__), 'tima_icon.ico')
+            img.save(icon_path, format='ICO', sizes=[(64, 64)])
+
+            # Use iconbitmap for better Windows taskbar support
+            self.root.iconbitmap(icon_path)
+
+        except Exception as e:
+            print(f"Could not set icon: {e}")
+            # Fallback to iconphoto if ico fails
+            try:
+                bio = BytesIO()
+                img.save(bio, format='PNG')
+                bio.seek(0)
+                photo = tk.PhotoImage(data=bio.getvalue())
+                self.root.iconphoto(True, photo)
+                self.root._icon_photo = photo
+            except:
+                pass
 
     def create_menu_bar(self):
         """Create the application menu bar"""
