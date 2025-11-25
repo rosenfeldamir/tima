@@ -1,13 +1,16 @@
 {
   "projects": [
-    "tima"
+    "tima",
+    "test gemini 3"
   ],
-  "current_index": 0,
+  "current_index": 1,
   "default_duration": 1800,
   "project_times": {
-    "tima": 1599
+    "test gemini 3": 1246,
+    "tima": 1580
   },
   "project_paused": {
+    "test gemini 3": false,
     "tima": false
   }
 }

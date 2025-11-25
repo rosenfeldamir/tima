@@ -18,7 +18,22 @@ class TimaApp:
         self.root.title("Tima")
         self.root.geometry("400x500")
         self.root.minsize(350, 450)
-        self.root.configure(bg='#f4f7f6')
+
+        # Modern color scheme
+        self.colors = {
+            'bg': '#1e1e2e',           # Dark background
+            'surface': '#2a2a3e',       # Surface elements
+            'primary': '#6c63ff',       # Primary accent
+            'secondary': '#4a9eff',     # Secondary accent
+            'success': '#00d4aa',       # Success/active
+            'warning': '#ffb86c',       # Warning
+            'danger': '#ff6b6b',        # Danger/delete
+            'text': '#e0e0e0',          # Main text
+            'text_dim': '#a0a0b0',      # Dimmed text
+            'border': '#3a3a4e'         # Borders
+        }
+
+        self.root.configure(bg=self.colors['bg'])
         self.root.resizable(True, True)
 
         # App state
@@ -99,20 +114,20 @@ class TimaApp:
         self.create_menu_bar()
 
         # Main container
-        main_frame = tk.Frame(self.root, bg='#f4f7f6', padx=12, pady=10)
+        main_frame = tk.Frame(self.root, bg=self.colors['bg'], padx=15, pady=12)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # Current activity display
-        self.activity_frame = tk.Frame(main_frame, bg='#3498db', relief=tk.FLAT, bd=0)
-        self.activity_frame.pack(fill=tk.X, pady=(0, 8))
+        self.activity_frame = tk.Frame(main_frame, bg=self.colors['surface'], relief=tk.FLAT, bd=0)
+        self.activity_frame.pack(fill=tk.X, pady=(0, 12))
 
         self.activity_label = tk.Label(
             self.activity_frame,
             text="Loading...",
-            font=('Arial', 12, 'bold'),
-            bg='#3498db',
-            fg='white',
-            pady=8
+            font=('Segoe UI', 13, 'bold'),
+            bg=self.colors['surface'],
+            fg=self.colors['text'],
+            pady=12
         )
         self.activity_label.pack()
 
@@ -120,22 +135,22 @@ class TimaApp:
         self.timer_label = tk.Label(
             main_frame,
             text="00:30:00",
-            font=('Arial', 32, 'bold'),
-            bg='#f4f7f6',
-            fg='#2c3e50'
+            font=('Segoe UI', 42, 'bold'),
+            bg=self.colors['bg'],
+            fg=self.colors['primary']
         )
-        self.timer_label.pack(pady=(5, 5))
+        self.timer_label.pack(pady=(8, 8))
 
         # Status container (combined status + action status)
-        status_container = tk.Frame(main_frame, bg='#f4f7f6')
-        status_container.pack(fill=tk.X, pady=(0, 8))
+        status_container = tk.Frame(main_frame, bg=self.colors['bg'])
+        status_container.pack(fill=tk.X, pady=(0, 10))
 
         self.status_label = tk.Label(
             status_container,
             text="",
-            font=('Arial', 9),
-            bg='#f4f7f6',
-            fg='#7f8c8d'
+            font=('Segoe UI', 9),
+            bg=self.colors['bg'],
+            fg=self.colors['text_dim']
         )
         self.status_label.pack()
 
@@ -143,9 +158,9 @@ class TimaApp:
         self.action_status_label = tk.Label(
             status_container,
             text="",
-            font=('Arial', 9),
-            bg='#f4f7f6',
-            fg='#27ae60',
+            font=('Segoe UI', 9),
+            bg=self.colors['bg'],
+            fg=self.colors['success'],
             height=1
         )
         self.action_status_label.pack()
@@ -154,57 +169,84 @@ class TimaApp:
         # Project management section
         project_frame = tk.LabelFrame(
             main_frame,
-            text="Projects",
-            font=('Arial', 10, 'bold'),
-            bg='#f4f7f6',
-            fg='#2c3e50',
-            padx=8,
-            pady=6
+            text="  PROJECTS  ",
+            font=('Segoe UI', 9, 'bold'),
+            bg=self.colors['bg'],
+            fg=self.colors['text_dim'],
+            labelanchor='n',
+            relief=tk.FLAT,
+            bd=0,
+            padx=0,
+            pady=8
         )
-        project_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
+        project_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 0))
 
         # Add project controls
-        add_frame = tk.Frame(project_frame, bg='#f4f7f6')
-        add_frame.pack(fill=tk.X, pady=(0, 6))
+        add_frame = tk.Frame(project_frame, bg=self.colors['bg'])
+        add_frame.pack(fill=tk.X, pady=(0, 8), padx=10)
 
         self.project_entry = tk.Entry(
             add_frame,
-            font=('Arial', 10),
-            relief=tk.SOLID,
-            bd=1
+            font=('Segoe UI', 10),
+            relief=tk.FLAT,
+            bg=self.colors['surface'],
+            fg=self.colors['text'],
+            insertbackground=self.colors['primary'],
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self.colors['border'],
+            highlightcolor=self.colors['primary']
         )
-        self.project_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 4))
+        self.project_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6), ipady=6)
         self.project_entry.bind('<Return>', lambda e: self.add_project())
 
         tk.Button(
             add_frame,
-            text="Add",
-            font=('Arial', 9),
-            bg='#3498db',
+            text="ADD",
+            font=('Segoe UI', 9, 'bold'),
+            bg=self.colors['primary'],
             fg='white',
-            padx=12,
-            pady=2,
+            activebackground=self.colors['secondary'],
+            activeforeground='white',
+            relief=tk.FLAT,
+            bd=0,
+            padx=16,
+            pady=6,
+            cursor='hand2',
             command=self.add_project
         ).pack(side=tk.RIGHT)
 
         # Project list with scrollbar
-        list_frame = tk.Frame(project_frame, bg='#f4f7f6')
-        list_frame.pack(fill=tk.BOTH, expand=True)
+        list_frame = tk.Frame(project_frame, bg=self.colors['bg'])
+        list_frame.pack(fill=tk.BOTH, expand=True, padx=10)
 
         self.project_listbox = tk.Listbox(
             list_frame,
-            font=('Arial', 9),
+            font=('Segoe UI', 10),
             height=8,
-            relief=tk.SOLID,
-            bd=1,
+            relief=tk.FLAT,
+            bd=0,
             selectmode=tk.SINGLE,
-            exportselection=False,  # Keep selection even when out of focus
-            highlightthickness=0
+            exportselection=False,
+            highlightthickness=0,
+            bg=self.colors['surface'],
+            fg=self.colors['text'],
+            selectbackground=self.colors['primary'],
+            selectforeground='white',
+            activestyle='none'
         )
         self.project_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        scrollbar = tk.Scrollbar(list_frame, orient=tk.VERTICAL)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        scrollbar = tk.Scrollbar(
+            list_frame,
+            orient=tk.VERTICAL,
+            bg=self.colors['surface'],
+            troughcolor=self.colors['bg'],
+            activebackground=self.colors['primary'],
+            bd=0,
+            width=12
+        )
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(4, 0))
 
         self.project_listbox.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=self.project_listbox.yview)
@@ -333,8 +375,11 @@ RENAME DIALOG:
         # Otherwise, handle project undo
         self.undo_last_operation()
 
-    def show_status(self, message, duration=3000, color='#27ae60'):
+    def show_status(self, message, duration=3000, color=None):
         """Show a temporary status message that fades away"""
+        if color is None:
+            color = self.colors['success']
+
         # Cancel any existing timer
         if self.action_status_timer:
             self.root.after_cancel(self.action_status_timer)
@@ -363,7 +408,7 @@ RENAME DIALOG:
     def undo_last_operation(self):
         """Undo the last delete or rename operation"""
         if not self.undo_stack:
-            self.show_status("Nothing to undo!", color='#7f8c8d')
+            self.show_status("Nothing to undo!", color=self.colors['text_dim'])
             return
 
         operation = self.undo_stack.pop()
@@ -389,7 +434,7 @@ RENAME DIALOG:
             self.save_projects()
             self.render_projects()
             self.update_current_activity()
-            self.show_status(f"Restored project: {project_name}", color='#3498db')
+            self.show_status(f"Restored project: {project_name}", color=self.colors['secondary'])
 
         elif op_type == 'rename':
             # Restore old project name
@@ -409,7 +454,7 @@ RENAME DIALOG:
             self.save_projects()
             self.render_projects()
             self.update_current_activity()
-            self.show_status(f"Renamed back to: {old_name}", color='#3498db')
+            self.show_status(f"Renamed back to: {old_name}", color=self.colors['secondary'])
 
     def show_duration_dialog(self):
         """Show dialog to set default duration"""
@@ -464,7 +509,7 @@ RENAME DIALOG:
                 else:
                     self.default_duration = new_duration
                     self.save_projects()
-                    self.show_status(f"Default duration set to {hours}h {minutes}m", color='#3498db')
+                    self.show_status(f"Default duration set to {hours}h {minutes}m", color=self.colors['secondary'])
                     dialog.destroy()
             except ValueError:
                 messagebox.showerror("Invalid Input", "Please enter valid numbers!")
@@ -662,7 +707,7 @@ RENAME DIALOG:
                 self.render_projects()
                 self.update_current_activity()
 
-                self.show_status(f"Deleted project: {deleted_project}", color='#e74c3c')
+                self.show_status(f"Deleted project: {deleted_project}", color=self.colors['danger'])
 
     def rename_project(self):
         """Rename the selected project"""
@@ -727,7 +772,7 @@ RENAME DIALOG:
                         self.render_projects()
                         self.update_current_activity()
                         dialog.destroy()
-                        self.show_status(f"Renamed to: {new_name}", color='#3498db')
+                        self.show_status(f"Renamed to: {new_name}", color=self.colors['secondary'])
                     elif not new_name:
                         messagebox.showwarning("Invalid Name", "Project name cannot be empty!")
                     else:
@@ -819,19 +864,19 @@ RENAME DIALOG:
         # Update status
         if self.projects:
             if self.is_current_project_paused():
-                self.status_label.config(text="⏸ PAUSED", fg='#e67e22')
+                self.status_label.config(text="⏸ PAUSED", fg=self.colors['warning'])
             else:
-                self.status_label.config(text="▶ RUNNING", fg='#27ae60')
+                self.status_label.config(text="▶ RUNNING", fg=self.colors['success'])
         else:
-            self.status_label.config(text="No projects", fg='#7f8c8d')
+            self.status_label.config(text="No projects", fg=self.colors['text_dim'])
 
         # Flash when time is up
         if time_left <= 0 and not self.is_current_project_paused():
             current_color = self.timer_label.cget('fg')
-            new_color = '#e74c3c' if current_color == '#2c3e50' else '#2c3e50'
+            new_color = self.colors['danger'] if current_color == self.colors['primary'] else self.colors['primary']
             self.timer_label.config(fg=new_color)
         else:
-            self.timer_label.config(fg='#2c3e50')
+            self.timer_label.config(fg=self.colors['primary'])
 
     def update_current_activity(self):
         """Update the current activity display"""
