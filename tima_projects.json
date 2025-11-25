@@ -1,16 +1,22 @@
 {
   "projects": [
-    "tima",
-    "test gemini 3"
+    "test gemini 3",
+    "anychild:route finder",
+    "anychild: jacky style puzzles",
+    "qvqa: add sliding window approach"
   ],
   "current_index": 1,
   "default_duration": 1800,
   "project_times": {
-    "test gemini 3": 1246,
-    "tima": 1580
+    "test gemini 3": 1800,
+    "anychild:route finder": 1799,
+    "anychild: jacky style puzzles": 1800,
+    "qvqa: add sliding window approach": 1800
   },
   "project_paused": {
     "test gemini 3": false,
-    "tima": false
+    "anychild:route finder": true,
+    "anychild: jacky style puzzles": false,
+    "qvqa: add sliding window approach": false
   }
 }

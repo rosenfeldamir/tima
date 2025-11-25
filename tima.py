@@ -387,8 +387,38 @@ RENAME DIALOG:
         # Show the message
         self.action_status_label.config(text=message, fg=color)
 
-        # Schedule it to clear after duration
-        self.action_status_timer = self.root.after(duration, self.clear_status)
+        # Schedule fade out after duration
+        self.action_status_timer = self.root.after(duration, lambda: self.fade_status(color, 0))
+
+    def fade_status(self, original_color, step):
+        """Fade out the status message smoothly"""
+        total_steps = 20
+        if step >= total_steps:
+            self.clear_status()
+            return
+
+        # Interpolate between original color and background color
+        progress = step / total_steps
+        faded_color = self.interpolate_color(original_color, self.colors['bg'], progress)
+
+        self.action_status_label.config(fg=faded_color)
+
+        # Schedule next fade step
+        self.action_status_timer = self.root.after(30, lambda: self.fade_status(original_color, step + 1))
+
+    def interpolate_color(self, color1, color2, progress):
+        """Interpolate between two hex colors"""
+        # Convert hex to RGB
+        r1, g1, b1 = int(color1[1:3], 16), int(color1[3:5], 16), int(color1[5:7], 16)
+        r2, g2, b2 = int(color2[1:3], 16), int(color2[3:5], 16), int(color2[5:7], 16)
+
+        # Interpolate
+        r = int(r1 + (r2 - r1) * progress)
+        g = int(g1 + (g2 - g1) * progress)
+        b = int(b1 + (b2 - b1) * progress)
+
+        # Convert back to hex
+        return f'#{r:02x}{g:02x}{b:02x}'
 
     def clear_status(self):
         """Clear the action status message"""
