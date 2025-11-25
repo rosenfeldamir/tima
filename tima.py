@@ -32,6 +32,10 @@ class TimaApp:
         self.last_update_time = None
         self.after_id = None
 
+        # Undo stack for delete/rename operations
+        self.undo_stack = []
+        self.max_undo_stack_size = 10
+
         # Load saved projects
         self.load_projects()
 
@@ -43,6 +47,9 @@ class TimaApp:
 
         # Handle window closing
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # Bind global keyboard shortcuts
+        self.setup_global_shortcuts()
 
     def setup_gui(self):
         # Main container
@@ -66,8 +73,11 @@ class TimaApp:
 
         tk.Label(duration_controls, text="Default Duration:", bg='#f4f7f6', font=('Arial', 10)).pack(side=tk.LEFT)
 
-        self.hours_var = tk.StringVar(value="1")
-        self.minutes_var = tk.StringVar(value="0")
+        # Set initial values based on loaded default_duration
+        initial_hours = self.default_duration // 3600
+        initial_minutes = (self.default_duration % 3600) // 60
+        self.hours_var = tk.StringVar(value=str(initial_hours))
+        self.minutes_var = tk.StringVar(value=str(initial_minutes))
 
         tk.Entry(duration_controls, textvariable=self.hours_var, width=3, font=('Arial', 10)).pack(side=tk.LEFT,
                                                                                                    padx=(5, 2))
@@ -214,9 +224,24 @@ class TimaApp:
         self.project_listbox.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=self.project_listbox.yview)
 
+        # Bind keyboard shortcuts for project management
+        self.project_listbox.bind('<Delete>', lambda e: self.delete_project())
+        self.project_listbox.bind('<F2>', lambda e: self.rename_project())
+        self.project_listbox.bind('<Return>', lambda e: self.rename_project())
+        self.project_listbox.bind('<Double-Button-1>', lambda e: self.rename_project())
+
         # Project control buttons
         project_btn_frame = tk.Frame(project_frame, bg='#f4f7f6')
         project_btn_frame.pack(fill=tk.X, pady=(10, 0))
+
+        tk.Button(
+            project_btn_frame,
+            text="Rename Selected",
+            font=('Arial', 12),
+            bg='#3498db',
+            fg='white',
+            command=self.rename_project
+        ).pack(side=tk.LEFT, padx=(0, 5))
 
         tk.Button(
             project_btn_frame,
@@ -225,7 +250,7 @@ class TimaApp:
             bg='#e74c3c',
             fg='white',
             command=self.delete_project
-        ).pack(side=tk.LEFT, padx=(0, 5))
+        ).pack(side=tk.LEFT, padx=5)
 
         tk.Button(
             project_btn_frame,
@@ -271,6 +296,167 @@ class TimaApp:
 
         # Initial render
         self.render_projects()
+
+    def setup_global_shortcuts(self):
+        """Setup global keyboard shortcuts"""
+        # Space: Pause/Resume current project
+        self.root.bind('<space>', lambda e: self.toggle_current_project())
+
+        # Page Up/Down: Navigate projects
+        self.root.bind('<Prior>', lambda e: self.previous_project())  # Page Up
+        self.root.bind('<Next>', lambda e: self.next_project())  # Page Down
+
+        # Ctrl+Z: Undo last delete/rename
+        self.root.bind('<Control-z>', lambda e: self.undo_last_operation())
+
+        # ?: Show help
+        self.root.bind('?', lambda e: self.show_help())
+
+    def show_help(self):
+        """Show keyboard shortcuts help dialog"""
+        help_dialog = tk.Toplevel(self.root)
+        help_dialog.title("Keyboard Shortcuts")
+        help_dialog.geometry("500x450")
+        help_dialog.configure(bg='#f4f7f6')
+        help_dialog.transient(self.root)
+        help_dialog.grab_set()
+
+        # Center the dialog
+        help_dialog.update_idletasks()
+        x = (help_dialog.winfo_screenwidth() // 2) - (help_dialog.winfo_width() // 2)
+        y = (help_dialog.winfo_screenheight() // 2) - (help_dialog.winfo_height() // 2)
+        help_dialog.geometry(f"+{x}+{y}")
+
+        # Dialog content
+        frame = tk.Frame(help_dialog, bg='#f4f7f6', padx=20, pady=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        tk.Label(
+            frame,
+            text="Keyboard Shortcuts",
+            bg='#f4f7f6',
+            font=('Arial', 16, 'bold'),
+            fg='#2c3e50'
+        ).pack(pady=(0, 15))
+
+        # Create shortcuts text
+        shortcuts_text = tk.Text(
+            frame,
+            font=('Courier New', 10),
+            bg='white',
+            relief=tk.SOLID,
+            bd=1,
+            wrap=tk.WORD,
+            height=18,
+            width=55
+        )
+        shortcuts_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        help_content = """GLOBAL SHORTCUTS:
+  Space              Pause/Resume current project
+  Page Up            Previous project
+  Page Down          Next project
+  Ctrl+Z             Undo last delete/rename
+  ?                  Show this help screen
+
+PROJECT LIST SHORTCUTS:
+  Enter              Rename selected project
+  F2                 Rename selected project
+  Delete             Delete selected project
+  Double-click       Rename selected project
+
+ADD PROJECT:
+  Enter              Add project (in text entry field)
+
+RENAME DIALOG:
+  Enter              Save new name
+  Escape             Cancel rename
+"""
+
+        shortcuts_text.insert('1.0', help_content)
+        shortcuts_text.config(state=tk.DISABLED)
+
+        # Close button
+        tk.Button(
+            frame,
+            text="Close",
+            font=('Arial', 11),
+            bg='#3498db',
+            fg='white',
+            padx=30,
+            command=help_dialog.destroy
+        ).pack()
+
+        # Bind Escape to close
+        help_dialog.bind('<Escape>', lambda e: help_dialog.destroy())
+
+    def previous_project(self):
+        """Move to the previous project"""
+        if self.projects:
+            self.current_project_index = (self.current_project_index - 1) % len(self.projects)
+            self.save_projects()
+            self.update_display()
+
+    def push_undo(self, operation_type, data):
+        """Push an undo operation onto the stack"""
+        self.undo_stack.append({
+            'type': operation_type,
+            'data': data
+        })
+        # Limit stack size
+        if len(self.undo_stack) > self.max_undo_stack_size:
+            self.undo_stack.pop(0)
+
+    def undo_last_operation(self):
+        """Undo the last delete or rename operation"""
+        if not self.undo_stack:
+            messagebox.showinfo("Undo", "Nothing to undo!")
+            return
+
+        operation = self.undo_stack.pop()
+        op_type = operation['type']
+        data = operation['data']
+
+        if op_type == 'delete':
+            # Restore deleted project
+            index = data['index']
+            project_name = data['name']
+            project_time = data['time']
+            project_paused = data['paused']
+
+            # Insert project back at its original position
+            self.projects.insert(index, project_name)
+            self.project_times[project_name] = project_time
+            self.project_paused[project_name] = project_paused
+
+            # Adjust current project index if needed
+            if index <= self.current_project_index:
+                self.current_project_index += 1
+
+            self.save_projects()
+            self.render_projects()
+            self.update_current_activity()
+            messagebox.showinfo("Undo", f"Restored project: {project_name}")
+
+        elif op_type == 'rename':
+            # Restore old project name
+            index = data['index']
+            old_name = data['old_name']
+            new_name = data['new_name']
+
+            # Rename back to old name
+            self.projects[index] = old_name
+
+            # Restore project data with old name
+            if new_name in self.project_times:
+                self.project_times[old_name] = self.project_times.pop(new_name)
+            if new_name in self.project_paused:
+                self.project_paused[old_name] = self.project_paused.pop(new_name)
+
+            self.save_projects()
+            self.render_projects()
+            self.update_current_activity()
+            messagebox.showinfo("Undo", f"Renamed back to: {old_name}")
 
     def update_default_duration(self):
         """Update the default duration for new projects"""
@@ -331,12 +517,6 @@ class TimaApp:
                     self.default_duration = data.get('default_duration', 3600)
                     self.project_times = data.get('project_times', {})
                     self.project_paused = data.get('project_paused', {})
-
-                    # Update duration display
-                    hours = self.default_duration // 3600
-                    minutes = (self.default_duration % 3600) // 60
-                    self.hours_var = tk.StringVar(value=str(hours))
-                    self.minutes_var = tk.StringVar(value=str(minutes))
 
         except Exception as e:
             print(f"Error loading projects: {e}")
@@ -423,7 +603,18 @@ class TimaApp:
             actual_index = selection[0]
 
             if 0 <= actual_index < len(self.projects):
-                deleted_project = self.projects.pop(actual_index)
+                deleted_project = self.projects[actual_index]
+
+                # Save undo information before deleting
+                self.push_undo('delete', {
+                    'index': actual_index,
+                    'name': deleted_project,
+                    'time': self.project_times.get(deleted_project, self.default_duration),
+                    'paused': self.project_paused.get(deleted_project, False)
+                })
+
+                # Now perform the delete
+                self.projects.pop(actual_index)
 
                 # Clean up associated data
                 if deleted_project in self.project_times:
@@ -443,6 +634,105 @@ class TimaApp:
                 self.update_current_activity()
 
                 messagebox.showinfo("Deleted", f"Deleted project: {deleted_project}")
+
+    def rename_project(self):
+        """Rename the selected project"""
+        selection = self.project_listbox.curselection()
+        if selection:
+            index = selection[0]
+
+            if 0 <= index < len(self.projects):
+                old_name = self.projects[index]
+
+                # Create a simple dialog window for renaming
+                dialog = tk.Toplevel(self.root)
+                dialog.title("Rename Project")
+                dialog.geometry("400x120")
+                dialog.configure(bg='#f4f7f6')
+                dialog.transient(self.root)
+                dialog.grab_set()
+
+                # Center the dialog
+                dialog.update_idletasks()
+                x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
+                y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
+                dialog.geometry(f"+{x}+{y}")
+
+                # Dialog content
+                frame = tk.Frame(dialog, bg='#f4f7f6', padx=20, pady=20)
+                frame.pack(fill=tk.BOTH, expand=True)
+
+                tk.Label(
+                    frame,
+                    text="New project name:",
+                    bg='#f4f7f6',
+                    font=('Arial', 11)
+                ).pack(anchor=tk.W, pady=(0, 5))
+
+                entry = tk.Entry(frame, font=('Arial', 12), width=40)
+                entry.pack(fill=tk.X, pady=(0, 10))
+                entry.insert(0, old_name)
+                entry.select_range(0, tk.END)
+                entry.focus_set()
+
+                def save_rename():
+                    new_name = entry.get().strip()
+                    if new_name and new_name != old_name:
+                        # Save undo information before renaming
+                        self.push_undo('rename', {
+                            'index': index,
+                            'old_name': old_name,
+                            'new_name': new_name
+                        })
+
+                        # Update project name
+                        self.projects[index] = new_name
+
+                        # Update project times and paused state
+                        if old_name in self.project_times:
+                            self.project_times[new_name] = self.project_times.pop(old_name)
+                        if old_name in self.project_paused:
+                            self.project_paused[new_name] = self.project_paused.pop(old_name)
+
+                        self.save_projects()
+                        self.render_projects()
+                        self.update_current_activity()
+                        dialog.destroy()
+                    elif not new_name:
+                        messagebox.showwarning("Invalid Name", "Project name cannot be empty!")
+                    else:
+                        dialog.destroy()
+
+                def cancel_rename():
+                    dialog.destroy()
+
+                # Buttons
+                btn_frame = tk.Frame(frame, bg='#f4f7f6')
+                btn_frame.pack(fill=tk.X)
+
+                tk.Button(
+                    btn_frame,
+                    text="Save",
+                    font=('Arial', 10),
+                    bg='#3498db',
+                    fg='white',
+                    padx=20,
+                    command=save_rename
+                ).pack(side=tk.LEFT, padx=(0, 5))
+
+                tk.Button(
+                    btn_frame,
+                    text="Cancel",
+                    font=('Arial', 10),
+                    bg='#95a5a6',
+                    fg='white',
+                    padx=20,
+                    command=cancel_rename
+                ).pack(side=tk.LEFT)
+
+                # Bind Enter and Escape keys
+                entry.bind('<Return>', lambda e: save_rename())
+                dialog.bind('<Escape>', lambda e: cancel_rename())
 
     def reset_current_project(self):
         """Reset the current project's timer"""

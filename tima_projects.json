@@ -1,19 +1,22 @@
 {
   "projects": [
-    "CLIP Exploration",
-    "Learn About Inversion",
-    "Calling All Prompts"
+    "Learning",
+    "1",
+    "2",
+    "3"
   ],
-  "current_index": 2,
-  "default_duration": 3600,
+  "current_index": 3,
+  "default_duration": 1800,
   "project_times": {
-    "CLIP Exploration": 1570,
-    "Learn About Inversion": 1197,
-    "Calling All Prompts": 3598
+    "Learning": 1767,
+    "1": 1799,
+    "3": 1792,
+    "2": 1791
   },
   "project_paused": {
-    "CLIP Exploration": true,
-    "Learn About Inversion": false,
-    "Calling All Prompts": true
+    "Learning": true,
+    "1": false,
+    "3": false,
+    "2": false
   }
 }
