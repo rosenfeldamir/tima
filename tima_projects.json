@@ -1,22 +1,19 @@
 {
   "projects": [
-    "Learning",
     "1",
     "2",
     "3"
   ],
-  "current_index": 3,
+  "current_index": 2,
   "default_duration": 1800,
   "project_times": {
-    "Learning": 1767,
-    "1": 1799,
-    "3": 1792,
-    "2": 1791
+    "2": 1756,
+    "3": 1796,
+    "1": 1743
   },
   "project_paused": {
-    "Learning": true,
-    "1": false,
+    "2": false,
     "3": false,
-    "2": false
+    "1": false
   }
 }

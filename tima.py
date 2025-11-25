@@ -4,12 +4,12 @@ Tima - Activity Timer
 A desktop productivity timer that cycles through your projects with customizable durations.
 """
 
-import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
 import json
 import os
-from datetime import datetime, timedelta
+import tkinter as tk
 import winsound  # For Windows alarm sound (use 'playsound' library for cross-platform)
+from datetime import datetime, timedelta
+from tkinter import ttk, messagebox, filedialog
 
 
 class TimaApp:
@@ -131,6 +131,18 @@ class TimaApp:
         )
         self.status_label.pack()
 
+        # Action status message (for showing temporary feedback)
+        self.action_status_label = tk.Label(
+            main_frame,
+            text="",
+            font=('Arial', 11),
+            bg='#f4f7f6',
+            fg='#27ae60',
+            height=1
+        )
+        self.action_status_label.pack(pady=(5, 0))
+        self.action_status_timer = None
+
         # Timer controls
         controls_frame = tk.Frame(main_frame, bg='#f4f7f6')
         controls_frame.pack(pady=15)
@@ -214,7 +226,8 @@ class TimaApp:
             height=10,
             relief=tk.SOLID,
             bd=1,
-            selectmode=tk.SINGLE
+            selectmode=tk.SINGLE,
+            exportselection=False  # Keep selection even when out of focus
         )
         self.project_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
@@ -225,7 +238,6 @@ class TimaApp:
         scrollbar.config(command=self.project_listbox.yview)
 
         # Bind keyboard shortcuts for project management
-        self.project_listbox.bind('<Delete>', lambda e: self.delete_project())
         self.project_listbox.bind('<F2>', lambda e: self.rename_project())
         self.project_listbox.bind('<Return>', lambda e: self.rename_project())
         self.project_listbox.bind('<Double-Button-1>', lambda e: self.rename_project())
@@ -302,12 +314,17 @@ class TimaApp:
         # Space: Pause/Resume current project
         self.root.bind('<space>', lambda e: self.toggle_current_project())
 
-        # Page Up/Down: Navigate projects
+        # Arrow keys and Page Up/Down: Navigate projects
+        self.root.bind('<Up>', lambda e: self.previous_project())
+        self.root.bind('<Down>', lambda e: self.next_project())
         self.root.bind('<Prior>', lambda e: self.previous_project())  # Page Up
         self.root.bind('<Next>', lambda e: self.next_project())  # Page Down
 
-        # Ctrl+Z: Undo last delete/rename
-        self.root.bind('<Control-z>', lambda e: self.undo_last_operation())
+        # Delete: Delete selected project
+        self.root.bind('<Delete>', lambda e: self.delete_project())
+
+        # Ctrl+Z: Undo last delete/rename (use bind_all to work even when entry has focus)
+        self.root.bind_all('<Control-z>', self.handle_undo_key)
 
         # ?: Show help
         self.root.bind('?', lambda e: self.show_help())
@@ -354,15 +371,15 @@ class TimaApp:
 
         help_content = """GLOBAL SHORTCUTS:
   Space              Pause/Resume current project
-  Page Up            Previous project
-  Page Down          Next project
+  Up / Page Up       Previous project
+  Down / Page Down   Next project
+  Delete             Delete selected project
   Ctrl+Z             Undo last delete/rename
   ?                  Show this help screen
 
 PROJECT LIST SHORTCUTS:
   Enter              Rename selected project
   F2                 Rename selected project
-  Delete             Delete selected project
   Double-click       Rename selected project
 
 ADD PROJECT:
@@ -397,6 +414,32 @@ RENAME DIALOG:
             self.save_projects()
             self.update_display()
 
+    def handle_undo_key(self, event):
+        """Handle Ctrl+Z - skip if typing in an entry field"""
+        focused_widget = self.root.focus_get()
+        # If an Entry widget has focus, let it handle Ctrl+Z for text undo
+        if isinstance(focused_widget, tk.Entry):
+            return
+        # Otherwise, handle project undo
+        self.undo_last_operation()
+
+    def show_status(self, message, duration=3000, color='#27ae60'):
+        """Show a temporary status message that fades away"""
+        # Cancel any existing timer
+        if self.action_status_timer:
+            self.root.after_cancel(self.action_status_timer)
+
+        # Show the message
+        self.action_status_label.config(text=message, fg=color)
+
+        # Schedule it to clear after duration
+        self.action_status_timer = self.root.after(duration, self.clear_status)
+
+    def clear_status(self):
+        """Clear the action status message"""
+        self.action_status_label.config(text="")
+        self.action_status_timer = None
+
     def push_undo(self, operation_type, data):
         """Push an undo operation onto the stack"""
         self.undo_stack.append({
@@ -410,7 +453,7 @@ RENAME DIALOG:
     def undo_last_operation(self):
         """Undo the last delete or rename operation"""
         if not self.undo_stack:
-            messagebox.showinfo("Undo", "Nothing to undo!")
+            self.show_status("Nothing to undo!", color='#7f8c8d')
             return
 
         operation = self.undo_stack.pop()
@@ -436,7 +479,7 @@ RENAME DIALOG:
             self.save_projects()
             self.render_projects()
             self.update_current_activity()
-            messagebox.showinfo("Undo", f"Restored project: {project_name}")
+            self.show_status(f"Restored project: {project_name}", color='#3498db')
 
         elif op_type == 'rename':
             # Restore old project name
@@ -456,7 +499,7 @@ RENAME DIALOG:
             self.save_projects()
             self.render_projects()
             self.update_current_activity()
-            messagebox.showinfo("Undo", f"Renamed back to: {old_name}")
+            self.show_status(f"Renamed back to: {old_name}", color='#3498db')
 
     def update_default_duration(self):
         """Update the default duration for new projects"""
@@ -556,6 +599,10 @@ RENAME DIALOG:
 
     def render_projects(self):
         """Update the project listbox"""
+        # Remember the current selection
+        current_selection = self.project_listbox.curselection()
+        selected_index = current_selection[0] if current_selection else None
+
         self.project_listbox.delete(0, tk.END)
         for i, project in enumerate(self.projects):
             time_left = self.project_times.get(project, self.default_duration)
@@ -576,8 +623,10 @@ RENAME DIALOG:
 
             self.project_listbox.insert(tk.END, display_text)
 
-        # Highlight current project
-        if 0 <= self.current_project_index < len(self.projects):
+        # Restore the previous selection, or select current project if nothing was selected
+        if selected_index is not None and 0 <= selected_index < len(self.projects):
+            self.project_listbox.selection_set(selected_index)
+        elif 0 <= self.current_project_index < len(self.projects):
             self.project_listbox.selection_set(self.current_project_index)
 
     def add_project(self):
@@ -590,6 +639,7 @@ RENAME DIALOG:
             self.project_entry.delete(0, tk.END)
             self.save_projects()
             self.render_projects()
+            self.show_status(f"Added project: {project_name}")
 
             # If this is the first project, start the timer
             if len(self.projects) == 1:
@@ -633,7 +683,7 @@ RENAME DIALOG:
                 self.render_projects()
                 self.update_current_activity()
 
-                messagebox.showinfo("Deleted", f"Deleted project: {deleted_project}")
+                self.show_status(f"Deleted project: {deleted_project}", color='#e74c3c')
 
     def rename_project(self):
         """Rename the selected project"""
@@ -698,6 +748,7 @@ RENAME DIALOG:
                         self.render_projects()
                         self.update_current_activity()
                         dialog.destroy()
+                        self.show_status(f"Renamed to: {new_name}", color='#3498db')
                     elif not new_name:
                         messagebox.showwarning("Invalid Name", "Project name cannot be empty!")
                     else:
