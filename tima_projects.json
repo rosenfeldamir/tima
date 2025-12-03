@@ -1,22 +1,19 @@
 {
   "projects": [
-    "test gemini 3",
-    "anychild:route finder",
-    "anychild: jacky style puzzles",
-    "qvqa: add sliding window approach"
+    "Project Chimera: Longitudinal Quantum Entanglement Nexus",
+    "Harmonic Resonance Field Generator (HRFG)",
+    "The $\\zeta$-Paradigm Subspace Differential Array"
   ],
-  "current_index": 1,
+  "current_index": 0,
   "default_duration": 1800,
   "project_times": {
-    "test gemini 3": 1800,
-    "anychild:route finder": 1799,
-    "anychild: jacky style puzzles": 1800,
-    "qvqa: add sliding window approach": 1800
+    "Project Chimera: Longitudinal Quantum Entanglement Nexus": 1770,
+    "Harmonic Resonance Field Generator (HRFG)": 1800,
+    "The $\\zeta$-Paradigm Subspace Differential Array": 1796
   },
   "project_paused": {
-    "test gemini 3": false,
-    "anychild:route finder": true,
-    "anychild: jacky style puzzles": false,
-    "qvqa: add sliding window approach": false
+    "Project Chimera: Longitudinal Quantum Entanglement Nexus": true,
+    "Harmonic Resonance Field Generator (HRFG)": false,
+    "The $\\zeta$-Paradigm Subspace Differential Array": false
   }
 }

@@ -41,3 +41,6 @@ build-backend = "uv_build"
 
 [tool.uv]
 dev-dependencies = []
+
+[tool.uv.packages]
+include = ["tima_projects.json"]

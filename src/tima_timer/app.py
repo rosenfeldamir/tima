@@ -6,12 +6,21 @@ A desktop productivity timer that cycles through your projects with customizable
 
 import json
 import os
+import platform
 import tkinter as tk
-import winsound  # For Windows alarm sound (use 'playsound' library for cross-platform)
 from datetime import datetime, timedelta
 from pathlib import Path
 from tkinter import ttk, messagebox, filedialog
 from io import BytesIO
+
+# Platform-specific imports for sound
+if platform.system() == 'Windows':
+    try:
+        import winsound
+    except ImportError:
+        winsound = None
+else:
+    winsound = None
 
 
 from PIL import Image, ImageDraw
@@ -58,6 +67,9 @@ class TimaApp:
         config_dir = Path.home() / ".tima"
         config_dir.mkdir(exist_ok=True)
         self.data_file = str(config_dir / "tima_projects.json")
+
+        # Path to default projects file (included with package)
+        self.default_projects_file = Path(__file__).parent.parent.parent / "tima_projects.json"
 
         # Timer state
         self.last_update_time = None
@@ -669,8 +681,9 @@ RENAME DIALOG:
 
     def load_projects(self):
         """Load projects from JSON file"""
-        try:
-            if os.path.exists(self.data_file):
+        # Try to load from user's config directory first
+        if os.path.exists(self.data_file):
+            try:
                 with open(self.data_file, 'r') as f:
                     data = json.load(f)
                     self.projects = data.get('projects', [])
@@ -678,12 +691,24 @@ RENAME DIALOG:
                     self.default_duration = data.get('default_duration', 3600)
                     self.project_times = data.get('project_times', {})
                     self.project_paused = data.get('project_paused', {})
+            except Exception as e:
+                print(f"Error loading projects from {self.data_file}: {e}")
 
-        except Exception as e:
-            print(f"Error loading projects: {e}")
+        # If no user data, try to load from default projects file (included with package)
+        if not self.projects and os.path.exists(self.default_projects_file):
+            try:
+                with open(self.default_projects_file, 'r') as f:
+                    data = json.load(f)
+                    self.projects = data.get('projects', [])
+                    self.current_project_index = data.get('current_index', 0)
+                    self.default_duration = data.get('default_duration', 3600)
+                    self.project_times = data.get('project_times', {})
+                    self.project_paused = data.get('project_paused', {})
+            except Exception as e:
+                print(f"Error loading default projects from {self.default_projects_file}: {e}")
 
-        # Default projects if none loaded
-        if self.projects is None:
+        # Fallback to hardcoded defaults if nothing loaded
+        if not self.projects:
             self.projects = ['Develop new feature', 'Review research papers', 'Team meeting prep']
             self.current_project_index = 0
             # Initialize project times and pause states
@@ -1008,12 +1033,13 @@ RENAME DIALOG:
         current_project = self.projects[self.current_project_index] if self.projects else "Current project"
 
         # Play alarm sound
-        try:
-            # winsound.PlaySound(r'C:\Windows\Media\')
-            winsound.PlaySound('C:/Windows/Media/Alarm04.wav',
-                               winsound.SND_FILENAME | winsound.SND_ASYNC)  # , winsound.SND_ALIAS)
-            # winsound.Beep(1000, 1000)  # 1000 Hz for 1 second
-        except:
+        if winsound:
+            try:
+                winsound.PlaySound('C:/Windows/Media/Alarm04.wav',
+                                   winsound.SND_FILENAME | winsound.SND_ASYNC)
+            except Exception as e:
+                print(f"Could not play Windows sound: {e}")
+        else:
             print("Alarm! Timer ended!")  # Fallback for non-Windows
 
         # Show notification
@@ -1138,8 +1164,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import winsound
-
-    # Play Windows exit sound.
-
     main()
