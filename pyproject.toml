@@ -1,6 +1,6 @@
 [project]
 name = "tima-timer"
-version = "1.0.0"
+version = "1.0.1"
 description = "A sleek desktop productivity timer for managing multiple projects"
 readme = "README.md"
 authors = [
@@ -39,8 +39,3 @@ tima-gui = "tima_timer.app:main"
 requires = ["uv_build>=0.9.13,<0.10.0"]
 build-backend = "uv_build"
 
-[tool.uv]
-dev-dependencies = []
-
-[tool.uv.packages]
-include = ["tima_projects.json"]
