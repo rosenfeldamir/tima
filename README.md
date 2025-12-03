@@ -30,24 +30,61 @@ Tima is a modern, minimalist activity timer designed to help you cycle through m
 
 ## Installation
 
-### Requirements
-- Python 3.x
-- tkinter (usually included with Python)
-- Pillow (PIL) for icon generation
-- Windows OS (for native sound notifications)
+### System Requirements
 
-### Setup
+**tkinter** is required and must be installed at the system level:
+
+#### Ubuntu/Debian
+```bash
+sudo apt-get install python3-tk
+```
+
+#### Fedora/RHEL/CentOS
+```bash
+sudo dnf install python3-tkinter
+```
+
+#### Arch Linux
+```bash
+sudo pacman -S tk
+```
+
+#### Alpine Linux
+```bash
+sudo apk add py3-tkinter
+```
+
+#### macOS (using Homebrew)
+```bash
+brew install python-tk
+```
+
+#### Windows
+tkinter should be included with Python. If missing, reinstall Python and ensure "tcl/tk" is checked during installation.
+
+### Python Package Installation
+
+After installing tkinter, install tima-timer:
 
 ```bash
-# Clone or download the repository
-git clone <repository-url>
-cd tima
+uv pip install tima-timer
+```
 
-# Install dependencies
-pip install pillow
+Or with pip:
+```bash
+pip install tima-timer
+```
 
-# Run the application
-python tima.py
+### Running
+
+After installation, run:
+```bash
+tima
+```
+
+Or for GUI mode:
+```bash
+tima-gui
 ```
 
 ## Usage

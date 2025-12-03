@@ -7,11 +7,48 @@ A desktop productivity timer that cycles through your projects with customizable
 import json
 import os
 import platform
-import tkinter as tk
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from tkinter import ttk, messagebox, filedialog, simpledialog
 from io import BytesIO
+
+# Check for tkinter availability
+try:
+    import tkinter as tk
+    from tkinter import ttk, messagebox, filedialog, simpledialog
+except ImportError:
+    print("ERROR: tkinter is not installed on your system.", file=sys.stderr)
+    print("\ntkinter is a required system dependency for tima-timer.", file=sys.stderr)
+    print("\nPlease install it using one of the following commands:", file=sys.stderr)
+
+    system = platform.system()
+    if system == "Linux":
+        distro_info = os.popen("lsb_release -si 2>/dev/null").read().strip().lower()
+        if "ubuntu" in distro_info or "debian" in distro_info:
+            print("\n  Ubuntu/Debian:")
+            print("    sudo apt-get install python3-tk", file=sys.stderr)
+        elif "fedora" in distro_info or "rhel" in distro_info or "centos" in distro_info:
+            print("\n  Fedora/RHEL/CentOS:")
+            print("    sudo dnf install python3-tkinter", file=sys.stderr)
+        elif "arch" in distro_info:
+            print("\n  Arch Linux:")
+            print("    sudo pacman -S tk", file=sys.stderr)
+        elif "alpine" in distro_info:
+            print("\n  Alpine Linux:")
+            print("    sudo apk add py3-tkinter", file=sys.stderr)
+        else:
+            print("\n  Linux:")
+            print("    sudo apt-get install python3-tk  # or equivalent for your distro", file=sys.stderr)
+    elif system == "Darwin":
+        print("\n  macOS (using Homebrew):")
+        print("    brew install python-tk", file=sys.stderr)
+    elif system == "Windows":
+        print("\n  Windows:")
+        print("    tkinter should be included with Python. Reinstall Python and check 'tcl/tk'", file=sys.stderr)
+    else:
+        print("\n  Please install tkinter for your operating system", file=sys.stderr)
+
+    sys.exit(1)
 
 # Platform-specific imports for sound
 if platform.system() == 'Windows':
