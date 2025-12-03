@@ -70,10 +70,7 @@ After installing tkinter, install tima-timer:
 uv pip install tima-timer
 ```
 
-Or with pip:
-```bash
-pip install tima-timer
-```
+This works because `uv pip` uses the base uv Python which has tkinter available.
 
 ### Running
 
