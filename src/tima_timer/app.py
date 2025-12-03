@@ -10,7 +10,7 @@ import platform
 import tkinter as tk
 from datetime import datetime, timedelta
 from pathlib import Path
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, simpledialog
 from io import BytesIO
 
 # Platform-specific imports for sound
@@ -355,6 +355,11 @@ class TimaApp:
         # ?: Show help
         self.root.bind('?', lambda e: self.show_help())
 
+        # Escape and Q: Quit application
+        self.root.bind('<Escape>', lambda e: self.on_closing())
+        self.root.bind('q', lambda e: self.on_closing())
+        self.root.bind('Q', lambda e: self.on_closing())
+
     def show_help(self):
         """Show keyboard shortcuts help dialog"""
         help_dialog = tk.Toplevel(self.root)
@@ -402,6 +407,7 @@ class TimaApp:
   Delete             Delete selected project
   Ctrl+Z             Undo last delete/rename
   ?                  Show this help screen
+  Q / Esc            Quit application
 
 PROJECT LIST SHORTCUTS:
   Enter              Rename selected project
@@ -413,7 +419,6 @@ ADD PROJECT:
 
 RENAME DIALOG:
   Enter              Save new name
-  Escape             Cancel rename
 """
 
         shortcuts_text.insert('1.0', help_content)
@@ -438,7 +443,16 @@ RENAME DIALOG:
     def previous_project(self):
         """Move to the previous project"""
         if self.projects:
+            # Pause the current project before switching
+            current_project = self.projects[self.current_project_index]
+            self.project_paused[current_project] = True
+
             self.current_project_index = (self.current_project_index - 1) % len(self.projects)
+
+            # Resume the new current project
+            new_project = self.projects[self.current_project_index]
+            self.project_paused[new_project] = False
+
             self.save_projects()
             self.update_display()
 
@@ -831,104 +845,53 @@ RENAME DIALOG:
     def rename_project(self):
         """Rename the selected project"""
         selection = self.project_listbox.curselection()
-        if selection:
-            index = selection[0]
+        if not selection:
+            return
 
-            if 0 <= index < len(self.projects):
-                old_name = self.projects[index]
+        index = selection[0]
+        if not (0 <= index < len(self.projects)):
+            return
 
-                # Create a simple dialog window for renaming
-                dialog = tk.Toplevel(self.root)
-                dialog.title("Rename Project")
-                dialog.geometry("350x110")
-                dialog.configure(bg='#f4f7f6')
-                dialog.transient(self.root)
-                dialog.grab_set()
+        old_name = self.projects[index]
 
-                # Center the dialog
-                dialog.update_idletasks()
-                x = (dialog.winfo_screenwidth() // 2) - (dialog.winfo_width() // 2)
-                y = (dialog.winfo_screenheight() // 2) - (dialog.winfo_height() // 2)
-                dialog.geometry(f"+{x}+{y}")
+        # Show input dialog
+        new_name = simpledialog.askstring(
+            "Rename Project",
+            f"Enter new name for '{old_name}':",
+            initialvalue=old_name
+        )
 
-                # Dialog content
-                frame = tk.Frame(dialog, bg='#f4f7f6', padx=16, pady=12)
-                frame.pack(fill=tk.BOTH, expand=True)
+        if new_name is None:  # User cancelled
+            return
 
-                tk.Label(
-                    frame,
-                    text="New project name:",
-                    bg='#f4f7f6',
-                    font=('Arial', 10)
-                ).pack(anchor=tk.W, pady=(0, 6))
+        new_name = new_name.strip()
+        if not new_name:
+            messagebox.showwarning("Invalid Name", "Project name cannot be empty!")
+            return
 
-                entry = tk.Entry(frame, font=('Arial', 10), width=35)
-                entry.pack(fill=tk.X, pady=(0, 10))
-                entry.insert(0, old_name)
-                entry.select_range(0, tk.END)
-                entry.focus_set()
+        if new_name == old_name:
+            return
 
-                def save_rename():
-                    new_name = entry.get().strip()
-                    if new_name and new_name != old_name:
-                        # Save undo information before renaming
-                        self.push_undo('rename', {
-                            'index': index,
-                            'old_name': old_name,
-                            'new_name': new_name
-                        })
+        # Save undo information before renaming
+        self.push_undo('rename', {
+            'index': index,
+            'old_name': old_name,
+            'new_name': new_name
+        })
 
-                        # Update project name
-                        self.projects[index] = new_name
+        # Update project name
+        self.projects[index] = new_name
 
-                        # Update project times and paused state
-                        if old_name in self.project_times:
-                            self.project_times[new_name] = self.project_times.pop(old_name)
-                        if old_name in self.project_paused:
-                            self.project_paused[new_name] = self.project_paused.pop(old_name)
+        # Update project times and paused state
+        if old_name in self.project_times:
+            self.project_times[new_name] = self.project_times.pop(old_name)
+        if old_name in self.project_paused:
+            self.project_paused[new_name] = self.project_paused.pop(old_name)
 
-                        self.save_projects()
-                        self.render_projects()
-                        self.update_current_activity()
-                        dialog.destroy()
-                        self.show_status(f"Renamed to: {new_name}", color=self.colors['secondary'])
-                    elif not new_name:
-                        messagebox.showwarning("Invalid Name", "Project name cannot be empty!")
-                    else:
-                        dialog.destroy()
-
-                def cancel_rename():
-                    dialog.destroy()
-
-                # Buttons
-                btn_frame = tk.Frame(frame, bg='#f4f7f6')
-                btn_frame.pack(fill=tk.X)
-
-                tk.Button(
-                    btn_frame,
-                    text="Save",
-                    font=('Arial', 9),
-                    bg='#3498db',
-                    fg='white',
-                    padx=16,
-                    pady=3,
-                    command=save_rename
-                ).pack(side=tk.LEFT, padx=(0, 4))
-
-                tk.Button(
-                    btn_frame,
-                    text="Cancel",
-                    font=('Arial', 9),
-                    bg='#95a5a6',
-                    fg='white',
-                    padx=16,
-                    pady=3,
-                    command=cancel_rename
-                ).pack(side=tk.LEFT)
-
-                # Bind Enter and Escape keys
-                entry.bind('<Return>', lambda e: save_rename())
-                dialog.bind('<Escape>', lambda e: cancel_rename())
+        self.save_projects()
+        self.render_projects()
+        self.update_current_activity()
+        self.show_status(f"Renamed to: {new_name}", color=self.colors['secondary'])
 
     def reset_current_project(self):
         """Reset the current project's timer"""
@@ -962,6 +925,10 @@ RENAME DIALOG:
             self.project_paused[project_name] = not current_state
             self.save_projects()
             self.render_projects()
+            if current_state:
+                self.show_status(f"Resumed: {project_name}")
+            else:
+                self.show_status(f"Paused: {project_name}")
 
     def toggle_selected_project(self):
         """Toggle pause/resume for selected project"""
@@ -1089,7 +1056,16 @@ RENAME DIALOG:
     def next_project(self):
         """Move to the next project"""
         if self.projects:
+            # Pause the current project before switching
+            current_project = self.projects[self.current_project_index]
+            self.project_paused[current_project] = True
+
             self.current_project_index = (self.current_project_index + 1) % len(self.projects)
+
+            # Resume the new current project
+            new_project = self.projects[self.current_project_index]
+            self.project_paused[new_project] = False
+
             self.save_projects()
             self.update_display()
 
