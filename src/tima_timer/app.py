@@ -9,6 +9,7 @@ import os
 import tkinter as tk
 import winsound  # For Windows alarm sound (use 'playsound' library for cross-platform)
 from datetime import datetime, timedelta
+from pathlib import Path
 from tkinter import ttk, messagebox, filedialog
 from io import BytesIO
 
@@ -52,7 +53,11 @@ class TimaApp:
         self.project_times = {}  # Track remaining time for each project
         self.project_paused = {}  # Track pause state for each project
         self.timer_running = False
-        self.data_file = "tima_projects.json"
+
+        # Use user's home directory for data storage
+        config_dir = Path.home() / ".tima"
+        config_dir.mkdir(exist_ok=True)
+        self.data_file = str(config_dir / "tima_projects.json")
 
         # Timer state
         self.last_update_time = None
@@ -105,8 +110,10 @@ class TimaApp:
             # Center dot
             draw.ellipse([center-3, center-3, center+3, center+3], fill='white')
 
-            # Save as .ico file for Windows taskbar compatibility
-            icon_path = os.path.join(os.path.dirname(__file__), 'tima_icon.ico')
+            # Save as .ico file in user's config directory
+            config_dir = Path.home() / ".tima"
+            config_dir.mkdir(exist_ok=True)
+            icon_path = str(config_dir / 'tima_icon.ico')
             img.save(icon_path, format='ICO', sizes=[(64, 64)])
 
             # Use iconbitmap for better Windows taskbar support
