@@ -1,6 +1,6 @@
 [project]
 name = "tima-timer"
-version = "1.0.1"
+version = "1.0.3"
 description = "A sleek desktop productivity timer for managing multiple projects"
 readme = "README.md"
 requires-system = "tkinter"

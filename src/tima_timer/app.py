@@ -1171,9 +1171,44 @@ RENAME DIALOG:
 
 def main():
     """Main function to run the application"""
-    root = tk.Tk()
-    app = TimaApp(root)
-    root.mainloop()
+    try:
+        root = tk.Tk()
+        app = TimaApp(root)
+        root.mainloop()
+    except tk.TclError as e:
+        # Tcl/Tk runtime error - usually means Tcl libraries are missing
+        print("ERROR: Tcl/Tk is not properly installed on your system.", file=sys.stderr)
+        print("\ntkinter is a required system dependency for tima-timer.", file=sys.stderr)
+        print("\nPlease install it using one of the following commands:", file=sys.stderr)
+
+        system = platform.system()
+        if system == "Linux":
+            distro_info = os.popen("lsb_release -si 2>/dev/null").read().strip().lower()
+            if "ubuntu" in distro_info or "debian" in distro_info:
+                print("\n  Ubuntu/Debian:")
+                print("    sudo apt-get install python3-tk", file=sys.stderr)
+            elif "fedora" in distro_info or "rhel" in distro_info or "centos" in distro_info:
+                print("\n  Fedora/RHEL/CentOS:")
+                print("    sudo dnf install python3-tkinter", file=sys.stderr)
+            elif "arch" in distro_info:
+                print("\n  Arch Linux:")
+                print("    sudo pacman -S tk", file=sys.stderr)
+            elif "alpine" in distro_info:
+                print("\n  Alpine Linux:")
+                print("    sudo apk add py3-tkinter", file=sys.stderr)
+            else:
+                print("\n  Linux:")
+                print("    sudo apt-get install python3-tk  # or equivalent for your distro", file=sys.stderr)
+        elif system == "Darwin":
+            print("\n  macOS (using Homebrew):")
+            print("    brew install python-tk", file=sys.stderr)
+        elif system == "Windows":
+            print("\n  Windows:")
+            print("    tkinter should be included with Python. Reinstall Python and check 'tcl/tk'", file=sys.stderr)
+        else:
+            print("\n  Please install tkinter for your operating system", file=sys.stderr)
+
+        sys.exit(1)
 
 
 if __name__ == "__main__":
