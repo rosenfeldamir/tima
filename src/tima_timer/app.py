@@ -754,9 +754,9 @@ RENAME DIALOG:
 
             status = ""
             if is_current:
-                status += "► "
+                status += "> "
             else:
-                status += "   "
+                status += "  "
 
             if is_paused:
                 status += "[PAUSED] "
@@ -983,9 +983,9 @@ RENAME DIALOG:
         # Update status
         if self.projects:
             if self.is_current_project_paused():
-                self.status_label.config(text="⏸ PAUSED", fg=self.colors['warning'])
+                self.status_label.config(text="[PAUSED]", fg=self.colors['warning'])
             else:
-                self.status_label.config(text="▶ RUNNING", fg=self.colors['success'])
+                self.status_label.config(text="[RUNNING]", fg=self.colors['success'])
         else:
             self.status_label.config(text="No projects", fg=self.colors['text_dim'])
 
