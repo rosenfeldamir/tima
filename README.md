@@ -16,6 +16,7 @@ Tima is a modern, minimalist activity timer designed to help you cycle through m
 
 ### User Experience
 - **Modern Dark UI** - Easy on the eyes with a sleek, contemporary design
+- **Two-Panel Layout** - Timer and status on left, project list on right
 - **Keyboard Shortcuts** - Full keyboard navigation for power users
 - **Visual Indicators** - Clear status indicators for current, paused, and running projects
 - **Undo Support** - Restore accidentally deleted or renamed projects
@@ -57,7 +58,7 @@ The modern Flet UI will launch automatically!
 
 ### Getting Started
 
-1. **Launch Tima** - Run `python tima.py`
+1. **Launch Tima** - Run `tima` from your terminal
 2. **Add Projects** - Type project names in the input field and click ADD (or press Enter)
 3. **Start Working** - The timer automatically starts with your first project
 4. **Stay Focused** - Watch the countdown and receive alerts when time expires
@@ -70,8 +71,8 @@ The modern Flet UI will launch automatically!
 - New projects start with the default duration (1 hour)
 
 #### Renaming Projects
-- Select a project in the list
-- Press `F2`, `Enter`, or double-click
+- Click to select a project in the list
+- Press `F2` to open the rename dialog
 - Type the new name and press `Enter` to save
 
 #### Deleting Projects
@@ -94,54 +95,41 @@ The modern Flet UI will launch automatically!
 | `Delete` | Delete selected project |
 | `Ctrl+Z` | Undo last delete/rename |
 | `?` | Show keyboard shortcuts help |
+| `Q` / `Escape` | Quit application |
 
 #### Project List
 | Key | Action |
 |-----|--------|
-| `Enter` | Rename selected project |
 | `F2` | Rename selected project |
-| `Double-click` | Rename selected project |
+| `Click` | Select project |
 
 #### Text Entry
 | Key | Action |
 |-----|--------|
 | `Enter` | Add project (when focused on input field) |
 
-### Menu Bar Options
+### Menu Options
 
-#### File Menu
+Access the menu via the ⋮ button in the top-right corner:
+
 - **Import Projects** - Load project list from a text file
 - **Export Projects** - Save project list to a text file
+- **Settings** - Configure default time allocation for new projects
+- **Keyboard Shortcuts** - Display all available keyboard shortcuts
 - **Exit** - Close the application
 
-#### Project Menu
-- **Rename Selected** - Rename the selected project
-- **Delete Selected** - Remove the selected project
-- **Reset Selected** - Reset selected project timer to default
-- **Pause/Resume Selected** - Toggle pause state for selected project
-
-#### Timer Menu
-- **Pause/Resume Current** - Toggle current project timer
-- **Reset Current** - Reset current project to default duration
-- **Next Project** - Move to next project in the list
-- **Previous Project** - Move to previous project
-
-#### Settings Menu
-- **Set Default Duration** - Configure default time allocation for new projects
-
-#### Help Menu
-- **Keyboard Shortcuts** - Display all available keyboard shortcuts
+All project operations (rename, delete, pause/resume, reset) are available via keyboard shortcuts.
 
 ## Configuration
 
 ### Default Duration
-- Navigate to `Settings` → `Set Default Duration`
+- Click the menu (⋮) → `Settings`
 - Enter hours and minutes
 - New projects will use this duration
 - Existing projects keep their current settings
 
 ### Data Persistence
-All data is automatically saved to `tima_projects.json` including:
+All data is automatically saved to `~/.tima/tima_projects.json` including:
 - Project names and order
 - Individual project timer states
 - Pause states
@@ -182,8 +170,7 @@ tima/
 - ✅ **Windows**: Full support with native sound notifications
 - ✅ **macOS**: Full support
 - ✅ **Linux**: Full support (no system dependencies!)
-- 🌐 **Web**: Can run as web app
-- 📱 **Mobile**: iOS/Android support possible (future)
+- 🔮 **Web/Mobile**: Flet supports web and mobile deployment (not yet configured for this project)
 
 ## Tips & Tricks
 
