@@ -1,22 +1,25 @@
 {
   "projects": [
-    "test gemini 3",
-    "anychild:route finder",
-    "anychild: jacky style puzzles",
-    "qvqa: add sliding window approach"
+    "Quantum entanglement simulation",
+    "Neural network architecture design",
+    "Distributed systems protocol analysis",
+    "Cryptographic algorithm optimization",
+    "Database query performance tuning"
   ],
-  "current_index": 2,
+  "current_index": 0,
   "default_duration": 3600,
   "project_times": {
-    "test gemini 3": 1800,
-    "anychild:route finder": 1799,
-    "anychild: jacky style puzzles": 305,
-    "qvqa: add sliding window approach": 1799
+    "Quantum entanglement simulation": 3600,
+    "Neural network architecture design": 3600,
+    "Distributed systems protocol analysis": 3600,
+    "Cryptographic algorithm optimization": 3600,
+    "Database query performance tuning": 3600
   },
   "project_paused": {
-    "test gemini 3": false,
-    "anychild:route finder": true,
-    "anychild: jacky style puzzles": false,
-    "qvqa: add sliding window approach": false
+    "Quantum entanglement simulation": false,
+    "Neural network architecture design": false,
+    "Distributed systems protocol analysis": false,
+    "Cryptographic algorithm optimization": false,
+    "Database query performance tuning": false
   }
 }
