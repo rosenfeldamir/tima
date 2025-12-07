@@ -38,7 +38,9 @@ env/
 .python-version
 
 # Tima data files (user-specific)
-tima_projects.json
+# Note: Root tima_projects.json is the default template for the package
+# User data is stored in ~/.tima/tima_projects.json
+.tima/
 tima_projects_private.json
 *.ico
 
