@@ -1,6 +1,6 @@
 [project]
 name = "tima-timer"
-version = "1.0.5"
+version = "1.1.0"
 description = "A modern cross-platform productivity timer for managing multiple projects (Flet-based)"
 readme = "README.md"
 license = { text = "MIT" }
@@ -36,10 +36,10 @@ Repository = "https://github.com/rosenfeldamir/tima"
 Issues = "https://github.com/rosenfeldamir/tima/issues"
 
 [project.scripts]
-tima = "tima_timer.app_flet:main"
+tima = "tima_timer.app:main"
 
 [project.gui-scripts]
-tima-gui = "tima_timer.app_flet:main"
+tima-gui = "tima_timer.app:main"
 
 [build-system]
 requires = ["uv_build>=0.9.13,<0.10.0"]

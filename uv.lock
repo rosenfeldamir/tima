@@ -1515,7 +1515,7 @@ wheels = [
 
 [[package]]
 name = "tima-timer"
-version = "1.0.4"
+version = "1.0.5"
 source = { editable = "." }
 dependencies = [
     { name = "flet", version = "0.25.2", source = { registry = "https://pypi.org/simple" }, extra = ["all"], marker = "python_full_version < '3.9'" },
