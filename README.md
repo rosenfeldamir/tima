@@ -30,59 +30,28 @@ Tima is a modern, minimalist activity timer designed to help you cycle through m
 
 ## Installation
 
-### System Requirements
+### Quick Install
 
-**tkinter** is required and must be installed at the system level:
-
-#### Ubuntu/Debian
-```bash
-sudo apt-get install python3-tk
-```
-
-#### Fedora/RHEL/CentOS
-```bash
-sudo dnf install python3-tkinter
-```
-
-#### Arch Linux
-```bash
-sudo pacman -S tk
-```
-
-#### Alpine Linux
-```bash
-sudo apk add py3-tkinter
-```
-
-#### macOS (using Homebrew)
-```bash
-brew install python-tk
-```
-
-#### Windows
-tkinter should be included with Python. If missing, reinstall Python and ensure "tcl/tk" is checked during installation.
-
-### Python Package Installation
-
-After installing tkinter, install tima-timer:
+**No system dependencies required!** Just install and run:
 
 ```bash
+# Using uv (recommended)
 uv pip install tima-timer
+
+# Or using pip
+pip install tima-timer
 ```
 
-This works because `uv pip` uses the base uv Python which has tkinter available.
+Tima uses Flet (Flutter for Python), so everything you need is included - no tkinter, no Qt, no external dependencies!
 
 ### Running
 
-After installation, run:
+After installation, simply run:
 ```bash
 tima
 ```
 
-Or for GUI mode:
-```bash
-tima-gui
-```
+The modern Flet UI will launch automatically!
 
 ## Usage
 
@@ -188,23 +157,33 @@ The application uses a modern dark theme with carefully chosen colors:
 ## Technical Details
 
 ### Architecture
-- Built with Python's tkinter for cross-platform GUI
+- Built with **Flet** (Flutter for Python) for modern, cross-platform UI
+- **Modular design**: Separated UI, business logic, and data layers
 - JSON-based data persistence
-- Event-driven timer system using tkinter's `after()` method
+- Async timer system using Python's asyncio
 - Undo stack implementation for reversible operations
+- Material Design components
 
 ### File Structure
 ```
 tima/
-├── tima.py                      # Main application
-├── tima_projects.json           # User project data
-├── tima_icon.ico               # Application icon
+├── src/tima_timer/
+│   ├── app_flet.py             # Flet UI implementation
+│   ├── models.py               # Data models and state
+│   ├── timer_logic.py          # Business logic
+│   └── __init__.py             # Package entry point
+├── ~/.tima/
+│   └── tima_projects.json      # User project data (auto-saved)
+├── MIGRATION.md                # Migration documentation
 └── README.md                   # This file
 ```
 
-### Platform Notes
-- **Windows**: Full support with native sound notifications
-- **macOS/Linux**: GUI works, but sound notifications may need adjustment
+### Platform Support
+- ✅ **Windows**: Full support with native sound notifications
+- ✅ **macOS**: Full support
+- ✅ **Linux**: Full support (no system dependencies!)
+- 🌐 **Web**: Can run as web app
+- 📱 **Mobile**: iOS/Android support possible (future)
 
 ## Tips & Tricks
 
@@ -216,17 +195,17 @@ tima/
 
 ## Customization
 
-Want to change the default settings? Edit these values in `tima.py`:
+Want to change the default settings? Edit these values in `src/tima_timer/app_flet.py`:
 
 ```python
-self.default_duration = 3600  # Default duration in seconds (1 hour)
-
-# Color scheme (lines 29-40)
-self.colors = {
+# Color scheme (lines 17-28)
+COLORS = {
     'bg': '#1e1e2e',           # Dark background
     'primary': '#6c63ff',       # Primary accent color
     # ... customize other colors
 }
+
+# Default duration is stored in user data and can be changed via Settings menu
 ```
 
 ## Troubleshooting
@@ -237,7 +216,7 @@ self.colors = {
 
 ### Sound notifications not working?
 - Windows: Ensure `C:/Windows/Media/Alarm04.wav` exists
-- Other OS: Modify `timer_ended()` function to use cross-platform audio
+- macOS/Linux: Console notification will appear (audio support coming soon)
 
 ### Projects not saving?
 - Check write permissions in the application directory
@@ -250,12 +229,14 @@ This project is open source. Feel free to use, modify, and distribute as needed.
 ## Contributing
 
 Contributions are welcome! Some ideas for enhancements:
-- Cross-platform sound notifications
+- Cross-platform sound notifications (beyond Windows)
 - Statistics and time tracking reports
 - Project categories and tags
-- Desktop notifications (system tray)
-- Dark/light theme toggle
+- System tray integration
+- Light theme option
 - Custom alert sounds per project
+- Web version deployment
+- Mobile apps (iOS/Android)
 
 ---
 
