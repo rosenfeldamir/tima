@@ -19,6 +19,7 @@ class TimaApp:
         self.page = page
         self.state = TimaState(on_update=self.update, on_timer_end=self.timer_ended)
         self.selected_idx = 0
+        self.entry_focused = False
 
         # Setup
         page.title, page.window.width, page.window.height = "Tima", 700, 500
@@ -36,7 +37,9 @@ class TimaApp:
         self.entry = ft.TextField(hint_text="Project name", bgcolor=COLORS['surface'],
                                   border_color=COLORS['border'], focused_border_color=COLORS['primary'],
                                   color=COLORS['text'], text_size=12, height=45,
-                                  on_submit=lambda _: self.add_project(), expand=True, autofocus=False)
+                                  on_submit=lambda _: self.add_project(), expand=True, autofocus=False,
+                                  on_focus=lambda _: setattr(self, 'entry_focused', True),
+                                  on_blur=lambda _: setattr(self, 'entry_focused', False))
         self.projects_view = ft.ListView(spacing=4, padding=8, expand=True, auto_scroll=False)
 
         # Build UI
@@ -277,7 +280,11 @@ class TimaApp:
         picker.save_file(dialog_title="Export", file_name="tima_projects.txt", allowed_extensions=["txt"])
 
     def on_key(self, e: ft.KeyboardEvent):
-        # Always move focus to invisible sink to prevent buttons from activating
+        # Don't process shortcuts when typing in the entry field
+        if self.entry_focused:
+            return
+
+        # Move focus to invisible sink to prevent buttons from activating
         self.focus_sink.focus()
 
         if e.key == " ":
