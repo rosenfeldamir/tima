@@ -40,7 +40,10 @@ class TimaApp:
                                   on_submit=lambda _: self.add_project(), expand=True, autofocus=False,
                                   on_focus=lambda _: setattr(self, 'entry_focused', True),
                                   on_blur=lambda _: setattr(self, 'entry_focused', False))
-        self.projects_view = ft.ListView(spacing=4, padding=8, expand=True, auto_scroll=False)
+        self.projects_view = ft.ReorderableListView(
+            padding=8,
+            on_reorder=self.on_reorder
+        )
 
         # Build UI
         page.appbar = ft.AppBar(
@@ -130,13 +133,48 @@ class TimaApp:
             self.projects_view.controls.append(ft.Container(
                 content=ft.Text(text, size=12, color=color, weight=weight),
                 bgcolor=bg, border=border, padding=8, border_radius=4,
-                on_click=lambda _, idx=i: self.select(idx), ink=True
+                margin=ft.margin.only(bottom=4),  # Spacing between items
+                on_click=lambda _, idx=i: self.select(idx), ink=True,
+                key=str(i)  # Required for ReorderableListView
             ))
         self.page.update()
 
     def select(self, idx):
         self.selected_idx = idx
         self.render_projects()
+
+    def move_project_up(self, idx):
+        if self.state.move_up(idx):
+            # Update selected_idx if it was the moved item
+            if self.selected_idx == idx:
+                self.selected_idx = idx - 1
+            elif self.selected_idx == idx - 1:
+                self.selected_idx = idx
+            self.update()
+
+    def move_project_down(self, idx):
+        if self.state.move_down(idx):
+            # Update selected_idx if it was the moved item
+            if self.selected_idx == idx:
+                self.selected_idx = idx + 1
+            elif self.selected_idx == idx + 1:
+                self.selected_idx = idx
+            self.update()
+
+    def on_reorder(self, e):
+        """Handle project reordering via ReorderableListView."""
+        old_index = e.old_index
+        new_index = e.new_index
+
+        if self.state.move_to(old_index, new_index):
+            # Update selected_idx if needed
+            if self.selected_idx == old_index:
+                self.selected_idx = new_index
+            elif old_index < self.selected_idx <= new_index:
+                self.selected_idx -= 1
+            elif new_index <= self.selected_idx < old_index:
+                self.selected_idx += 1
+            self.update()
 
     def add_project(self):
         if self.state.add(self.entry.value):
@@ -263,7 +301,7 @@ class TimaApp:
         picker = ft.FilePicker(on_result=on_result)
         self.page.overlay.append(picker)
         self.page.update()
-        picker.pick_files(dialog_title="Import", allowed_extensions=["txt"], allow_multiple=False)
+        picker.pick_files(dialog_title="Import", allowed_extensions=["json"], allow_multiple=False)
 
     def export_dlg(self, _):
         def on_result(e):
@@ -277,7 +315,7 @@ class TimaApp:
         picker = ft.FilePicker(on_result=on_result)
         self.page.overlay.append(picker)
         self.page.update()
-        picker.save_file(dialog_title="Export", file_name="tima_projects.txt", allowed_extensions=["txt"])
+        picker.save_file(dialog_title="Export", file_name="tima_projects.json", allowed_extensions=["json"])
 
     def on_key(self, e: ft.KeyboardEvent):
         # Don't process shortcuts when typing in the entry field

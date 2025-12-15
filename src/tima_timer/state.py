@@ -152,6 +152,57 @@ class TimaState:
         self.save()
         return True
 
+    def move_up(self, idx: int) -> bool:
+        """Move project at idx up in the list (towards index 0)."""
+        if idx <= 0 or idx >= len(self.projects):
+            return False
+        # Swap with previous item
+        self.projects[idx], self.projects[idx - 1] = self.projects[idx - 1], self.projects[idx]
+        # Update current_index if needed
+        if self.current_index == idx:
+            self.current_index = idx - 1
+        elif self.current_index == idx - 1:
+            self.current_index = idx
+        self.save()
+        return True
+
+    def move_down(self, idx: int) -> bool:
+        """Move project at idx down in the list (towards end)."""
+        if idx < 0 or idx >= len(self.projects) - 1:
+            return False
+        # Swap with next item
+        self.projects[idx], self.projects[idx + 1] = self.projects[idx + 1], self.projects[idx]
+        # Update current_index if needed
+        if self.current_index == idx:
+            self.current_index = idx + 1
+        elif self.current_index == idx + 1:
+            self.current_index = idx
+        self.save()
+        return True
+
+    def move_to(self, from_idx: int, to_idx: int) -> bool:
+        """Move project from from_idx to to_idx position."""
+        if not (0 <= from_idx < len(self.projects) and 0 <= to_idx < len(self.projects)):
+            return False
+        if from_idx == to_idx:
+            return False
+
+        # Remove project from original position
+        project = self.projects.pop(from_idx)
+        # Insert at new position
+        self.projects.insert(to_idx, project)
+
+        # Update current_index
+        if self.current_index == from_idx:
+            self.current_index = to_idx
+        elif from_idx < self.current_index <= to_idx:
+            self.current_index -= 1
+        elif to_idx <= self.current_index < from_idx:
+            self.current_index += 1
+
+        self.save()
+        return True
+
     def toggle_pause(self, idx: int):
         if 0 <= idx < len(self.projects):
             p = self.projects[idx]
@@ -213,13 +264,17 @@ class TimaState:
 
     def import_from_file(self, path: str) -> int:
         with open(path, 'r', encoding='utf-8') as f:
-            projects = [line.strip() for line in f if line.strip()]
+            data = json.load(f)
+
+        projects = data.get('projects', [])
         if not projects:
             raise ValueError("No projects found")
+
         self.projects = projects
-        self.current_index = 0
-        self.project_times = {p: self.default_duration for p in projects}
-        self.project_paused = {p: False for p in projects}
+        self.current_index = data.get('current_index', 0)
+        self.default_duration = data.get('default_duration', 3600)
+        self.project_times = data.get('project_times', {p: self.default_duration for p in projects})
+        self.project_paused = data.get('project_paused', {p: False for p in projects})
         self.save()
         return len(projects)
 
@@ -227,7 +282,13 @@ class TimaState:
         if not self.projects:
             raise ValueError("No projects to export")
         with open(path, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(self.projects))
+            json.dump({
+                'projects': self.projects,
+                'current_index': self.current_index,
+                'default_duration': self.default_duration,
+                'project_times': self.project_times,
+                'project_paused': self.project_paused
+            }, f, indent=2)
 
     @staticmethod
     def format_time(seconds: int) -> str:
