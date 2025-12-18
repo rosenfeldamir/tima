@@ -130,11 +130,15 @@ class TimaApp:
             else:
                 bg, color, weight, border = "transparent", COLORS['text'], "normal", None
 
-            self.projects_view.controls.append(ft.Container(
-                content=ft.Text(text, size=12, color=color, weight=weight),
-                bgcolor=bg, border=border, padding=8, border_radius=4,
-                margin=ft.margin.only(bottom=4),  # Spacing between items
-                on_click=lambda _, idx=i: self.select(idx), ink=True,
+            self.projects_view.controls.append(ft.GestureDetector(
+                content=ft.Container(
+                    content=ft.Text(text, size=12, color=color, weight=weight),
+                    bgcolor=bg, border=border, padding=8, border_radius=4,
+                    margin=ft.margin.only(bottom=4),  # Spacing between items
+                    ink=True,
+                ),
+                on_tap=lambda _, idx=i: self.select(idx),
+                on_double_tap=lambda _, idx=i: self.on_project_double_click(idx),
                 key=str(i)  # Required for ReorderableListView
             ))
         self.page.update()
@@ -142,6 +146,24 @@ class TimaApp:
     def select(self, idx):
         self.selected_idx = idx
         self.render_projects()
+
+    def on_project_double_click(self, idx):
+        """Handle double-click on a project."""
+        if idx == self.state.current_index:
+            # If clicking current project, toggle pause
+            self.state.toggle_pause(idx)
+        else:
+            # Pause all projects
+            for i, p in enumerate(self.state.projects):
+                self.state.project_paused[p] = True
+
+            # Unpause the clicked project and make it current
+            clicked_project = self.state.projects[idx]
+            self.state.project_paused[clicked_project] = False
+            self.state.current_index = idx
+            self.state.save()
+
+        self.update()
 
     def move_project_up(self, idx):
         if self.state.move_up(idx):
@@ -241,10 +263,11 @@ class TimaApp:
         h, m = self.state.default_duration // 3600, (self.state.default_duration % 3600) // 60
         hrs, mins = ft.TextField(label="Hours", value=str(h), width=100, keyboard_type=ft.KeyboardType.NUMBER), \
                     ft.TextField(label="Minutes", value=str(m), width=100, keyboard_type=ft.KeyboardType.NUMBER)
+        apply_to_all = ft.Checkbox(label="Apply to all existing projects", value=False)
 
         def save(_):
             try:
-                if self.state.set_duration(int(hrs.value or 0), int(mins.value or 0)):
+                if self.state.set_duration(int(hrs.value or 0), int(mins.value or 0), apply_to_all.value):
                     self.show_status(f"Duration set to {hrs.value}h {mins.value}m", COLORS['secondary'])
                     dlg.open = False
                     self.page.update()
@@ -252,7 +275,8 @@ class TimaApp:
                 pass
 
         dlg = self.dialog(ft.Column([ft.Text("Set default duration:"),
-                                     ft.Row([hrs, mins], spacing=8)], tight=True, spacing=12),
+                                     ft.Row([hrs, mins], spacing=8),
+                                     apply_to_all], tight=True, spacing=12),
                          [ft.TextButton("Cancel", on_click=lambda _: self.close_dialog(dlg)),
                           ft.TextButton("Save", on_click=save)], "Settings")
         self.page.overlay.append(dlg)

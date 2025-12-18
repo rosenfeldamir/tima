@@ -254,11 +254,14 @@ class TimaState:
             return f"Renamed back to: {data['old_name']}"
         return None
 
-    def set_duration(self, hours: int, minutes: int) -> bool:
+    def set_duration(self, hours: int, minutes: int, apply_to_all: bool = False) -> bool:
         duration = hours * 3600 + minutes * 60
         if duration <= 0:
             return False
         self.default_duration = duration
+        if apply_to_all:
+            for project in self.projects:
+                self.project_times[project] = duration
         self.save()
         return True
 
